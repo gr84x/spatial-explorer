@@ -1,0 +1,37 @@
+# AI tool context ignores
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.pyc
+.git/
+dist/
+build/
+*.log
+.env
+*.egg-info/
+.pytest_cache/
+coverage/
+.nyc_output/
+
+# Patterns from .gitignore
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Build artifacts
+*.log
