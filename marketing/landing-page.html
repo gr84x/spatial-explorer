@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spatial Explorer - 3D Data Visualization for Scientists & Developers</title>
+    <meta name="description" content="Open source 3D visualization for geospatial and spatial data. Built for data scientists, researchers, and developers who need to explore complex spatial datasets.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #06b6d4;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #ffffff;
+            --bg-alt: #f9fafb;
+            --border: #e5e7eb;
+            --code-bg: #1e293b;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Header */
+        header {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .github-stars {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-alt);
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .github-stars:hover {
+            background: var(--border);
+        }
+
+        .github-stars svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 6rem 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+        }
+
+        .demo-visual {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-snippet {
+            background: var(--code-bg);
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        .code-snippet .comment { color: #64748b; }
+        .code-snippet .keyword { color: #c084fc; }
+        .code-snippet .string { color: #4ade80; }
+        .code-snippet .function { color: #60a5fa; }
+
+        /* Problem/Solution Section */
+        .problem-solution {
+            padding: 6rem 0;
+            background: var(--bg-alt);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 4rem;
+        }
+
+        .ps-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .ps-card {
+            padding: 2rem;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+        }
+
+        .ps-card.problem {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .ps-card.solution {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .ps-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ps-card ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .ps-card li {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .ps-card li::before {
+            content: '•';
+            font-weight: bold;
+        }
+
+        .problem li::before { color: #dc2626; }
+        .solution li::before { color: var(--success); }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .feature-example {
+            background: var(--bg-alt);
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text);
+        }
+
+        /* Open Source Section */
+        .open-source {
+            padding: 6rem 0;
+            background: var(--code-bg);
+            color: white;
+        }
+
+        .os-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .os-card {
+            text-align: center;
+        }
+
+        .os-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .os-card p {
+            opacity: 0.8;
+        }
+
+        .os-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Enterprise Section */
+        .enterprise {
+            padding: 6rem 0;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+        }
+
+        .enterprise-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .enterprise h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .enterprise-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .enterprise-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .enterprise-features li::before {
+            content: '✓';
+            color: var(--success);
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+
+        .enterprise-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .enterprise-card h4 {
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .enterprise-card p {
+            opacity: 0.8;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Community Section */
+        .community {
+            padding: 6rem 0;
+            background: var(--bg-alt);
+        }
+
+        .community-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 0;
+            background: var(--code-bg);
+            color: white;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .footer-section a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-section a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            opacity: 0.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-content,
+            .ps-grid,
+            .enterprise-content,
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .community-stats,
+            .os-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="#" class="logo">Spatial Explorer</a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#docs">Docs</a>
+                <a href="#enterprise">Enterprise</a>
+                <a href="https://github.com/spatial-explorer/spatial-explorer" class="github-stars">
+                    <svg viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                    <span>2.3k stars</span>
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container hero-content">
+            <div>
+                <h1>Visualize Spatial Data in 3D</h1>
+                <p>Open source visualization toolkit for geospatial and 3D datasets. Built for data scientists and researchers who need to explore complex spatial relationships.</p>
+                <div class="cta-group">
+                    <a href="#" class="btn btn-primary">Get Started</a>
+                    <a href="#" class="btn btn-secondary">View on GitHub</a>
+                </div>
+            </div>
+            <div class="demo-visual">
+                <div class="code-snippet"><span class="keyword">import</span> spatial_explorer <span class="keyword">as</span> se
+
+<span class="comment"># Load your spatial data</span>
+viewer = se.<span class="function">Viewer</span>(data=<span class="string">'geospatial.parquet'</span>)
+
+<span class="comment"># Visualize in 3D with one line</span>
+viewer.<span class="function">plot</span>(
+    x=<span class="string">'longitude'</span>,
+    y=<span class="string">'latitude'</span>,
+    z=<span class="string">'elevation'</span>,
+    color=<span class="string">'temperature'</span>
+)
+
+<span class="comment"># Interactive 3D view in your browser</span>
+viewer.<span class="function">show</span>()</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="problem-solution">
+        <div class="container">
+            <div class="ps-grid">
+                <div class="ps-card problem">
+                    <h3>🚫 The Problem</h3>
+                    <ul>
+                        <li>2D visualizations hide spatial relationships</li>
+                        <li>Commercial tools lock you into proprietary formats</li>
+                        <li>GIS software has a steep learning curve</li>
+                        <li>Existing libraries require extensive WebGL knowledge</li>
+                        <li>Poor integration with data science workflows</li>
+                    </ul>
+                </div>
+                <div class="ps-card solution">
+                    <h3>✓ The Solution</h3>
+                    <ul>
+                        <li>True 3D visualization reveals hidden patterns</li>
+                        <li>MIT licensed - use anywhere, modify freely</li>
+                        <li>Familiar pandas/numpy API - minimal learning curve</li>
+                        <li>Built-in WebGL rendering, no graphics expertise needed</li>
+                        <li>Native Jupyter support, plays nice with your stack</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Built for Data Scientists</h2>
+            <p class="section-subtitle">Production-ready features, zero configuration required</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🗺️</div>
+                    <h3>Multi-Format Support</h3>
+                    <p>Load GeoJSON, Shapefile, Parquet, CSV, NetCDF, or any format pandas can read. Automatic coordinate system detection.</p>
+                    <div class="feature-example">
+se.load('data.geojson')<br>
+se.load('points.parquet')<br>
+se.load('grid.nc')
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>High Performance</h3>
+                    <p>GPU-accelerated rendering. Visualize millions of points in real-time with spatial indexing and level-of-detail optimization.</p>
+                    <div class="feature-example">
+# 10M points, 60fps<br>
+viewer.plot(df, point_size=2)
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔬</div>
+                    <h3>Analysis Ready</h3>
+                    <p>Interactive selection, filtering, and measurement tools. Export selections back to pandas for statistical analysis.</p>
+                    <div class="feature-example">
+selected = viewer.select_region()<br>
+df_subset = selected.to_pandas()
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Smart Styling</h3>
+                    <p>Automatic color mapping, customizable gradients, categorical and continuous colormaps. Built-in support for terrain shading.</p>
+                    <div class="feature-example">
+viewer.style(colormap='terrain',<br>
+            hillshade=True)
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Layer Management</h3>
+                    <p>Combine multiple datasets with transparency control. Toggle layers on/off, adjust z-ordering dynamically.</p>
+                    <div class="feature-example">
+viewer.add_layer(roads)<br>
+viewer.add_layer(buildings)<br>
+viewer.add_layer(terrain)
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📤</div>
+                    <h3>Export Anywhere</h3>
+                    <p>Generate publication-ready images, interactive HTML, or embed in dashboards. Share as standalone files, no server required.</p>
+                    <div class="feature-example">
+viewer.export('viz.html')<br>
+viewer.screenshot('figure.png')
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="open-source">
+        <div class="container">
+            <h2 class="section-title">Open Source, Open Future</h2>
+            <p class="section-subtitle">MIT licensed. Transparent. Community-driven.</p>
+            
+            <div class="os-grid">
+                <div class="os-card">
+                    <div class="os-icon">🔓</div>
+                    <h3>No Lock-In</h3>
+                    <p>MIT license means you can use, modify, and redistribute freely. Your data, your control, your infrastructure.</p>
+                </div>
+                <div class="os-card">
+                    <div class="os-icon">🔍</div>
+                    <h3>Fully Transparent</h3>
+                    <p>Every line of code is public. Audit security, inspect algorithms, understand exactly how your data is processed.</p>
+                </div>
+                <div class="os-card">
+                    <div class="os-icon">🤝</div>
+                    <h3>Built Together</h3>
+                    <p>Active community of researchers and developers. Contribute features, report bugs, shape the roadmap.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="enterprise" class="enterprise">
+        <div class="container enterprise-content">
+            <div>
+                <h2>Enterprise Support & Features</h2>
+                <ul class="enterprise-features">
+                    <li>Priority support with guaranteed SLA</li>
+                    <li>Custom feature development</li>
+                    <li>On-premise deployment assistance</li>
+                    <li>Training workshops for your team</li>
+                    <li>Architecture consulting</li>
+                    <li>Private security patching</li>
+                </ul>
+                <a href="#contact" class="btn btn-primary">Talk to Sales</a>
+            </div>
+            <div>
+                <div class="enterprise-card">
+                    <h4>Who Uses Enterprise?</h4>
+                    <p>Research institutions, environmental agencies, aerospace companies, and urban planning departments who need:</p>
+                    <ul>
+                        <li>• Commercial support contracts</li>
+                        <li>• Custom integrations with legacy systems</li>
+                        <li>• Compliance documentation</li>
+                        <li>• Dedicated Slack/Teams channels</li>
+                        <li>• Annual training sessions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="community" class="community">
+        <div class="container">
+            <h2 class="section-title">Join the Community</h2>
+            <p class="section-subtitle">Growing ecosystem of spatial data enthusiasts</p>
+            
+            <div class="community-stats">
+                <div class="stat-card">
+                    <div class="stat-number">2.3k</div>
+                    <div class="stat-label">GitHub Stars</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">400+</div>
+                    <div class="stat-label">Contributors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">15k</div>
+                    <div class="stat-label">Monthly Downloads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">1.2k</div>
+                    <div class="stat-label">Discord Members</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Spatial Explorer</h4>
+                    <p>Open source 3D visualization for spatial data. Built by researchers, for researchers.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">API Reference</a></li>
+                        <li><a href="#">Tutorials</a></li>
+                        <li><a href="#">Examples</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="#">GitHub</a></li>
+                        <li><a href="#">Discord</a></li>
+                        <li><a href="#">Forum</a></li>
+                        <li><a href="#">Contributing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">Enterprise</a></li>
+                        <li><a href="#">Support</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Spatial Explorer. MIT Licensed. Made with ❤️ by the open source community.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
