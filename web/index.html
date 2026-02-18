@@ -15,13 +15,9 @@
   <div class="wrap">
     <header>
       <div class="titleblock">
-        <h1>
-          Spatial Explorer
-          <span id="datasetLabel" class="tagline">(synthetic demo)</span>
-        </h1>
-        <p>
-          Visualize spatial biology data: map cell types, query marker genes, and inspect per-cell profiles.
-        </p>
+        <h1>Spatial Explorer</h1>
+        <p class="subtitle">Visualize spatial biology data</p>
+        <p id="datasetLabel" class="dataset-info" style="display:none;"></p>
       </div>
 
       <div class="badge" title="Mock dataset generated in-browser">
@@ -33,60 +29,99 @@
     <div class="grid">
       <div class="panel viz" aria-label="Spatial plot">
         <div class="vizbar">
-          <div class="left">
-            <div class="field" title="Type a gene symbol to color cells by expression (e.g., EPCAM, CD3E, COL1A1)">
+          <div class="search-section">
+            <div class="field" title="Type a gene symbol to color cells by expression">
               <label for="gene">Gene</label>
-              <input id="gene" list="genes" inputmode="latin" autocomplete="off" spellcheck="false" placeholder="Search gene (EPCAM, CD3E, CD19, LST1, COL1A1…)" />
+              <input id="gene" list="genes" inputmode="latin" autocomplete="off" spellcheck="false" placeholder="Search gene (EPCAM, CD3E, CD19…)" />
               <datalist id="genes"></datalist>
+              <button class="help-btn" id="geneHelp" type="button" title="Show gene help" aria-label="Gene search help">?</button>
             </div>
-            <div class="hint" id="geneHint">Tip: try <strong>EPCAM</strong> (tumor), <strong>CD3E</strong> (T), <strong>CD19</strong> (B), <strong>LST1</strong> (myeloid), <strong>PECAM1</strong> (endo).</div>
+            <div class="hint hint--collapsible" id="geneHint">Tip: try <strong>EPCAM</strong>, <strong>CD3E</strong>, <strong>CD19</strong>, <strong>LST1</strong>, <strong>PECAM1</strong></div>
           </div>
 
-          <div class="controls">
-            <button class="btn btn--primary btn--cta" id="load" title="Upload a CSV/TSV file (or drag & drop onto the plot)">Upload CSV/TSV</button>
-            <div class="uploadHelp" id="uploadHelp">
-              Drag &amp; drop onto the plot, or upload a file with <strong>cell_id</strong>, <strong>x</strong>, <strong>y</strong> (optional <strong>cell_type</strong>; other columns = genes).
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <button class="btn btn--primary" id="load" title="Upload a CSV/TSV file">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                <span>Upload</span>
+              </button>
+              <button class="btn" id="reset" title="Reset view">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+                <span class="btn-label">Reset</span>
+              </button>
             </div>
-            <input id="file" type="file" accept=".csv,.tsv,text/csv,text/tab-separated-values" style="display:none" />
-            <button class="btn" id="reset">Reset view</button>
-            <button class="btn" id="zin" title="Zoom in">+</button>
-            <button class="btn" id="zout" title="Zoom out">−</button>
-            <button class="btn" id="themeToggle" title="Toggle light/dark theme" aria-label="Toggle theme">Theme</button>
-            <button class="btn" id="feedbackBtn" title="Send feedback" aria-label="Send feedback">Feedback</button>
 
-            <label class="formRow" title="Calibration: microns per source pixel (x/y units). Used for the on-canvas scale bar.">
-              µm/px
-              <input class="input-sm" id="umPerPx" type="number" min="0" step="0.001" value="200" inputmode="decimal" />
-            </label>
+            <div class="toolbar-group toolbar-group--zoom">
+              <button class="btn btn--icon" id="zout" title="Zoom out" aria-label="Zoom out">−</button>
+              <button class="btn btn--icon" id="zin" title="Zoom in" aria-label="Zoom in">+</button>
+            </div>
 
-            <label class="formRow">
-              Export
-              <select class="select-sm" id="exportScale" title="Export resolution multiplier">
-                <option value="1">1x</option>
-                <option value="2" selected>2x</option>
-                <option value="4">4x</option>
-              </select>
-            </label>
+            <div class="toolbar-group">
+              <div class="dropdown" id="exportDropdown">
+                <button class="btn" id="exportToggle" type="button" aria-haspopup="true" aria-expanded="false">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-15M7 10l5 5 5-5M12 15V3"/></svg>
+                  <span class="btn-label">Export</span>
+                  <svg class="dropdown-arrow" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M8 11L3 6h10z"/></svg>
+                </button>
+                <div class="dropdown-menu" id="exportMenu" role="menu">
+                  <button class="dropdown-item" id="exportPng" role="menuitem">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                    Export PNG
+                  </button>
+                  <button class="dropdown-item" id="exportSvg" role="menuitem">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/></svg>
+                    Export SVG
+                  </button>
+                  <div class="dropdown-divider"></div>
+                  <div class="dropdown-section">
+                    <label class="dropdown-label">
+                      Resolution
+                      <select class="select-sm" id="exportScale">
+                        <option value="1">1x</option>
+                        <option value="2" selected>2x</option>
+                        <option value="4">4x</option>
+                      </select>
+                    </label>
+                    <label class="dropdown-label" title="Calibration: microns per pixel">
+                      µm/px
+                      <input class="input-sm" id="umPerPx" type="number" min="0" step="0.001" value="200" inputmode="decimal" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            <button class="btn" id="exportPng" title="Download the current view as a PNG">Export PNG</button>
-            <button class="btn" id="exportSvg" title="Download the current view as an SVG (vector)">Export SVG</button>
+            <div class="toolbar-group toolbar-group--end">
+              <button class="btn btn--icon" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+                <svg class="theme-icon theme-icon--sun" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3.5"/><path d="M8 1v2M8 13v2M15 8h-2M3 8H1M12.95 3.05l-1.41 1.41M4.46 11.54l-1.41 1.41M12.95 12.95l-1.41-1.41M4.46 4.46L3.05 3.05"/></svg>
+                <svg class="theme-icon theme-icon--moon" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/></svg>
+              </button>
+              <button class="btn btn--icon" id="feedbackBtn" title="Send feedback" aria-label="Send feedback">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </button>
+            </div>
           </div>
+
+          <input id="file" type="file" accept=".csv,.tsv,text/csv,text/tab-separated-values" style="display:none" />
         </div>
 
         <div class="canvasWrap">
-          <div id="welcome" class="welcomeOverlay" aria-label="Welcome">
-            <div class="welcomeCard">
-              <div class="welcomeTitle">Upload your dataset to begin</div>
-              <div class="welcomeText">
-                This page is showing a small <strong>synthetic demo</strong>. Upload a CSV/TSV to visualize your own spatial data.
+          <div id="welcome" class="emptyState" aria-label="Empty state">
+            <div class="emptyState-content">
+              <svg class="emptyState-icon" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+              </svg>
+              <h2 class="emptyState-title">Drop a file or click Upload</h2>
+              <p class="emptyState-text">CSV/TSV with <strong>cell_id</strong>, <strong>x</strong>, <strong>y</strong> columns</p>
+              <div class="emptyState-actions">
+                <button class="btn btn--primary btn--large" id="welcomeUpload">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                  Upload Dataset
+                </button>
               </div>
-              <div class="welcomeActions">
-                <button class="btn btn--primary btn--cta" id="welcomeUpload">Upload CSV/TSV</button>
-                <button class="btn" id="welcomeDismiss" title="Hide this message">Hide</button>
-              </div>
-              <div class="welcomeFootnote">
-                Required columns: <strong>cell_id</strong>, <strong>x</strong>, <strong>y</strong>. Optional: <strong>cell_type</strong>. Remaining columns are treated as gene expression.
-              </div>
+              <button class="emptyState-dismiss" id="welcomeDismiss" title="View demo data">
+                <span>or continue with demo</span>
+              </button>
             </div>
           </div>
 
@@ -174,7 +209,13 @@
     </div>
 
     <footer class="siteFooter" aria-label="Brand footer">
-      <a href="https://gr84x.com" target="_blank" rel="noopener noreferrer">a gr84x experience</a>
+      <div class="footer-content">
+        <span class="footer-text">A</span>
+        <a href="https://gr84x.com" target="_blank" rel="noopener noreferrer" class="footer-brand">
+          <span class="footer-brand-name">gr84x</span>
+        </a>
+        <span class="footer-text">experience</span>
+      </div>
     </footer>
   </div>
 
