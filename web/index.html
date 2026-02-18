@@ -4,248 +4,30 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Spatial Transcriptomics Explorer (Demo)</title>
-  <style>
-    :root{
-      --bg:#0a0a0a;
-      --panel:#101214;
-      --accent:#60a5fa;
-      --green:#22c55e;
-      --text:rgba(255,255,255,.90);
-      --muted:rgba(255,255,255,.66);
-      --border:rgba(255,255,255,.10);
-      --radius:16px;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:var(--font);
-      background:radial-gradient(1200px 700px at 25% -10%, rgba(96,165,250,.18), transparent 55%),
-                 radial-gradient(1000px 600px at 90% 10%, rgba(34,197,94,.10), transparent 55%),
-                 var(--bg);
-      color:var(--text);
-    }
-    a{color:var(--accent)}
 
-    .wrap{max-width:1200px;margin:0 auto;padding:24px;}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-    header{
-      display:flex;
-      gap:16px;
-      align-items:flex-start;
-      justify-content:space-between;
-      margin-bottom:16px;
-    }
-    .titleblock h1{
-      margin:0 0 8px 0;
-      font-size:22px;
-      letter-spacing:.2px;
-    }
-    .titleblock p{margin:0;color:var(--muted);line-height:1.35;max-width:68ch;}
-
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border:1px solid var(--border);
-      border-radius:999px;
-      color:var(--muted);
-      background:rgba(16,18,20,.65);
-      backdrop-filter: blur(8px);
-      box-shadow:var(--shadow);
-      user-select:none;
-      white-space:nowrap;
-    }
-    .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.15)}
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1.35fr .65fr;
-      gap:16px;
-      align-items:stretch;
-    }
-
-    .panel{
-      background:rgba(16,18,20,.72);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      backdrop-filter: blur(10px);
-      overflow:hidden;
-    }
-
-    .viz{
-      position:relative;
-      min-height:520px;
-      display:flex;
-      flex-direction:column;
-    }
-    .vizbar{
-      display:flex;
-      gap:10px;
-      padding:12px;
-      border-bottom:1px solid var(--border);
-      align-items:center;
-      justify-content:space-between;
-    }
-    .vizbar .left{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-
-    .input{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      background:rgba(10,10,10,.55);
-      border:1px solid var(--border);
-      border-radius:12px;
-      color:var(--text);
-      min-width:260px;
-    }
-    .input label{font-size:12px;color:var(--muted);user-select:none}
-    .input input{
-      width:100%;
-      background:transparent;
-      border:none;
-      outline:none;
-      color:var(--text);
-      font-size:13px;
-    }
-    .hint{
-      font-size:12px;
-      color:var(--muted);
-    }
-
-    .btns{display:flex;gap:8px;align-items:center;}
-    button{
-      appearance:none;
-      border:1px solid var(--border);
-      background:rgba(10,10,10,.50);
-      color:var(--text);
-      border-radius:12px;
-      padding:8px 10px;
-      font-size:12px;
-      cursor:pointer;
-      user-select:none;
-    }
-    button:hover{border-color:rgba(255,255,255,.18)}
-    button:active{transform:translateY(1px)}
-
-    .canvasWrap{position:relative;flex:1;}
-    .canvasWrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
-    #gl{pointer-events:none;background:transparent;}
-    #c{background:radial-gradient(900px 600px at 50% 45%, rgba(255,255,255,.04), rgba(0,0,0,0) 55%);}
-
-    .tooltip{
-      position:absolute;
-      pointer-events:none;
-      transform:translate(10px, 10px);
-      padding:8px 10px;
-      background:rgba(16,18,20,.90);
-      border:1px solid var(--border);
-      border-radius:12px;
-      font-size:12px;
-      color:var(--text);
-      max-width:260px;
-      display:none;
-      box-shadow:var(--shadow);
-    }
-    .tooltip .muted{color:var(--muted)}
-
-    .side{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      padding:12px;
-    }
-
-    .sectionTitle{
-      font-size:12px;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      color:var(--muted);
-      margin:0 0 10px 0;
-    }
-
-    .legend{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    .legendRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:8px 10px;
-      border:1px solid var(--border);
-      border-radius:14px;
-      background:rgba(10,10,10,.40);
-    }
-    .legendLeft{display:flex;align-items:center;gap:10px;min-width:0;}
-    .swatch{width:10px;height:10px;border-radius:3px;box-shadow:0 0 0 3px rgba(255,255,255,.06)}
-    .legendName{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .legendMeta{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;}
-
-    .check{
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    input[type="checkbox"]{
-      width:16px;height:16px;accent-color:var(--accent);
-    }
-
-    .card{
-      border:1px solid var(--border);
-      background:rgba(10,10,10,.40);
-      border-radius:14px;
-      padding:12px;
-    }
-    .kv{display:grid;grid-template-columns: 1fr auto;gap:8px 10px;align-items:center;}
-    .k{color:var(--muted);font-size:12px;}
-    .v{font-size:12px;}
-
-    .bars{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
-    .barRow{display:grid;grid-template-columns: 92px 1fr 44px;gap:10px;align-items:center;}
-    .barLabel{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .barTrack{height:10px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;border:1px solid rgba(255,255,255,.06)}
-    .barFill{height:100%;border-radius:999px;background:linear-gradient(90deg, rgba(96,165,250,.95), rgba(34,197,94,.85));}
-    .barVal{font-variant-numeric:tabular-nums;font-size:12px;color:var(--text);text-align:right;}
-
-    .note{color:var(--muted);font-size:12px;line-height:1.35}
-    .statusLine{font-size:12px;color:var(--muted);margin-top:8px;}
-    .statusLine strong{color:var(--text);font-weight:600}
-
-    @media (max-width: 980px){
-      .grid{grid-template-columns: 1fr;}
-      .viz{min-height:520px;}
-      .input{min-width:220px;}
-    }
-    @media (max-width: 560px){
-      header{flex-direction:column;align-items:flex-start;}
-      .vizbar{gap:8px;flex-direction:column;align-items:stretch;}
-      .vizbar .left{width:100%;}
-      .input{min-width:0;flex:1;}
-      .btns{justify-content:flex-start;}
-      .viz{min-height:470px;}
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="wrap">
     <header>
       <div class="titleblock">
-        <h1>Spatial Transcriptomics Explorer <span id="datasetLabel" style="color:var(--muted);font-weight:500">(synthetic demo)</span></h1>
+        <h1>
+          Spatial Transcriptomics Explorer
+          <span id="datasetLabel" style="color:var(--color-muted);font-weight:500">(synthetic demo)</span>
+        </h1>
         <p>
           Spatial transcriptomics measures gene expression while keeping each cell’s location in the tissue.
           This mini explorer mimics what you’d do on a real section: map cell types, query marker genes, and inspect single-cell profiles.
         </p>
       </div>
+
       <div class="badge" title="Mock dataset generated in-browser">
         <span class="dot"></span>
-        <span id="datasetBadgeText"><strong style="color:var(--text);font-weight:600">12000</strong> cells • 7 types • realistic markers</span>
+        <span id="datasetBadgeText"><strong style="color:var(--color-text);font-weight:600">12000</strong> cells • 7 types • realistic markers</span>
       </div>
     </header>
 
@@ -253,44 +35,49 @@
       <div class="panel viz" aria-label="Spatial plot">
         <div class="vizbar">
           <div class="left">
-            <div class="input" title="Type a gene symbol to color cells by expression (e.g., EPCAM, CD3E, COL1A1)">
+            <div class="field" title="Type a gene symbol to color cells by expression (e.g., EPCAM, CD3E, COL1A1)">
               <label for="gene">Gene</label>
               <input id="gene" list="genes" inputmode="latin" autocomplete="off" spellcheck="false" placeholder="Search gene (EPCAM, CD3E, CD19, LST1, COL1A1…)" />
               <datalist id="genes"></datalist>
             </div>
             <div class="hint" id="geneHint">Tip: try <strong>EPCAM</strong> (tumor), <strong>CD3E</strong> (T), <strong>CD19</strong> (B), <strong>LST1</strong> (myeloid), <strong>PECAM1</strong> (endo).</div>
           </div>
-          <div class="btns">
-            <button id="load" title="Load a CSV/TSV file (or drag & drop onto the plot)">Load CSV/TSV</button>
+
+          <div class="controls">
+            <button class="btn btn--primary" id="load" title="Load a CSV/TSV file (or drag & drop onto the plot)">Load CSV/TSV</button>
             <input id="file" type="file" accept=".csv,.tsv,text/csv,text/tab-separated-values" style="display:none" />
-            <button id="reset">Reset view</button>
-            <button id="zin" title="Zoom in">+</button>
-            <button id="zout" title="Zoom out">−</button>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-left:6px;" title="Calibration: microns per source pixel (x/y units). Used for the on-canvas scale bar.">
+            <button class="btn" id="reset">Reset view</button>
+            <button class="btn" id="zin" title="Zoom in">+</button>
+            <button class="btn" id="zout" title="Zoom out">−</button>
+
+            <label class="formRow" title="Calibration: microns per source pixel (x/y units). Used for the on-canvas scale bar.">
               µm/px
-              <input id="umPerPx" type="number" min="0" step="0.001" value="200" inputmode="decimal"
-                     style="width:86px;background:rgba(10,10,10,.50);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:7px 8px;font-size:12px;outline:none" />
+              <input class="input-sm" id="umPerPx" type="number" min="0" step="0.001" value="200" inputmode="decimal" />
             </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">
+
+            <label class="formRow">
               Export
-              <select id="exportScale" title="Export resolution multiplier" style="background:rgba(10,10,10,.50);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:7px 8px;font-size:12px;">
+              <select class="select-sm" id="exportScale" title="Export resolution multiplier">
                 <option value="1">1x</option>
                 <option value="2" selected>2x</option>
                 <option value="4">4x</option>
               </select>
             </label>
-            <button id="exportPng" title="Download the current view as a PNG">Export PNG</button>
-            <button id="exportSvg" title="Download the current view as an SVG (vector)">Export SVG</button>
+
+            <button class="btn" id="exportPng" title="Download the current view as a PNG">Export PNG</button>
+            <button class="btn" id="exportSvg" title="Download the current view as an SVG (vector)">Export SVG</button>
           </div>
         </div>
+
         <div class="canvasWrap">
           <canvas id="gl" aria-hidden="true"></canvas>
           <canvas id="c" aria-label="Tissue scatterplot" role="img"></canvas>
           <div class="tooltip" id="tip"></div>
-          <div id="drop" style="position:absolute;inset:10px;border:1px dashed rgba(255,255,255,.25);border-radius:14px;display:none;place-items:center;background:rgba(16,18,20,.65);backdrop-filter:blur(6px);">
+
+          <div id="drop" class="dropOverlay">
             <div style="text-align:center;max-width:46ch;">
               <div style="font-weight:650;margin-bottom:6px;">Drop CSV/TSV to load data</div>
-              <div style="color:var(--muted);font-size:12px;line-height:1.35;">Required columns: <strong>cell_id</strong>, <strong>x</strong>, <strong>y</strong>. Optional: <strong>cell_type</strong>. Remaining columns are treated as gene expression.</div>
+              <div class="note">Required columns: <strong>cell_id</strong>, <strong>x</strong>, <strong>y</strong>. Optional: <strong>cell_type</strong>. Remaining columns are treated as gene expression.</div>
             </div>
           </div>
         </div>
@@ -312,9 +99,9 @@
           <div id="gateRows" style="display:flex;flex-direction:column;gap:8px;"></div>
 
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
-            <button id="gateAdd">Add condition</button>
-            <button id="gateClear" title="Remove all conditions">Clear</button>
-            <label class="check" style="margin-left:auto;font-size:12px;color:var(--muted);">
+            <button class="btn" id="gateAdd">Add condition</button>
+            <button class="btn" id="gateClear" title="Remove all conditions">Clear</button>
+            <label class="check" style="margin-left:auto;font-size:12px;color:var(--color-muted);" title="Toggle gate highlight">
               <input id="gateEnabled" type="checkbox" checked />
               Highlight gate
             </label>
@@ -322,9 +109,9 @@
 
           <div style="margin-top:10px">
             <div class="k" style="margin-bottom:6px">Expression</div>
-            <input id="gateExpr" spellcheck="false" autocomplete="off" placeholder="A AND (B OR NOT C)" style="width:100%;background:rgba(10,10,10,.55);border:1px solid var(--border);border-radius:12px;padding:10px 10px;color:var(--text);font-size:12px;outline:none" />
+            <input id="gateExpr" spellcheck="false" autocomplete="off" placeholder="A AND (B OR NOT C)" style="width:100%;background:rgba(10,10,10,.55);border:1px solid var(--color-border);border-radius:14px;padding:10px 10px;color:var(--color-text);font-size:12px;outline:none" />
             <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap;">
-              <label class="check" style="font-size:12px;color:var(--muted);">
+              <label class="check" style="font-size:12px;color:var(--color-muted);">
                 <input id="gateAdvanced" type="checkbox" />
                 Advanced expression (edit manually)
               </label>
@@ -333,8 +120,8 @@
           </div>
 
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-            <button id="gateCopy" title="Copy gate JSON to clipboard">Copy gate JSON</button>
-            <button id="gatePaste" title="Paste/import gate JSON">Paste gate JSON</button>
+            <button class="btn" id="gateCopy" title="Copy gate JSON to clipboard">Copy gate JSON</button>
+            <button class="btn" id="gatePaste" title="Paste/import gate JSON">Paste gate JSON</button>
           </div>
           <div class="note" style="margin-top:8px">Operands are condition labels: A, B, C… Operators: AND, OR, NOT, parentheses.</div>
         </div>
