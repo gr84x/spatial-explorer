@@ -495,45 +495,68 @@ html[data-theme="light"] .theme-icon--moon{
   color: var(--color-text);
   width: 100%;
   text-align: left;
-  padding: 10px 12px;
+  padding: 11px 14px;
   font-size: 13px;
+  font-weight: 400;
   border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: background var(--dur-fast) var(--ease-standard);
-  min-height: 44px; /* Mobile touch target */
+  gap: 12px;
+  transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+  min-height: 42px; /* Mobile touch target */
 }
 
 .dropdown-item:hover{
   background: var(--color-control-bg);
+  color: var(--color-text);
 }
 
 .dropdown-item svg{
   flex-shrink: 0;
-  opacity: 0.7;
+  opacity: 0.6;
+  width: 16px;
+  height: 16px;
+}
+
+.dropdown-item:hover svg{
+  opacity: 0.85;
 }
 
 .dropdown-divider{
   height: 1px;
   background: var(--color-border);
-  margin: 6px 0;
+  margin: 4px 0;
+  opacity: 0.6;
 }
 
 .dropdown-section{
-  padding: 10px 12px;
+  padding: 8px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-sm);
+  margin: 2px;
+}
+
+html[data-theme="light"] .dropdown-section{
+  background: rgba(2, 6, 23, 0.04);
+}
+
+@media (prefers-color-scheme: light){
+  html:not([data-theme]) .dropdown-section{
+    background: rgba(2, 6, 23, 0.04);
+  }
 }
 
 .dropdown-label{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   font-size: 12px;
+  font-weight: 500;
   color: var(--color-muted);
 }
 
@@ -619,7 +642,6 @@ html[data-theme="light"] .theme-icon--moon{
 
 .emptyState-dismiss:hover{
   color: var(--color-text);
-  text-decoration: underline;
 }
 #gl{ pointer-events:none; background:transparent; }
 #c{ background: radial-gradient(900px 600px at 50% 45%, var(--canvas-glow-0), var(--canvas-glow-1) 55%); }
@@ -824,72 +846,54 @@ html[data-theme="light"] .barTrack{ background: rgba(2,6,23,.06); border-color: 
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   font-size: 11px;
-  letter-spacing: 0.08em;
-  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+  line-height: 1.6;
 }
 
 .footer-text{
   color: var(--color-muted);
+  opacity: 0.7;
 }
 
 .footer-brand{
   text-decoration: none;
   position: relative;
-  padding: 0 2px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .footer-brand-name{
-  color: #2DE2E6;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  color: var(--color-accent);
+  font-weight: 600;
+  letter-spacing: 0.03em;
   transition: all var(--dur-med) var(--ease-standard);
-  position: relative;
-  z-index: 1;
-}
-
-.footer-brand::before{
-  content: '';
-  position: absolute;
-  inset: -2px -4px;
-  background: rgba(45, 226, 230, 0.08);
-  border-radius: 6px;
-  opacity: 0;
-  transition: opacity var(--dur-med) var(--ease-standard);
-  z-index: 0;
-}
-
-.footer-brand:hover::before{
-  opacity: 1;
+  opacity: 0.85;
 }
 
 .footer-brand:hover .footer-brand-name{
-  color: #3FF3F7;
-  letter-spacing: 0.14em;
+  opacity: 1;
+  letter-spacing: 0.05em;
 }
 
 html[data-theme="light"] .footer-brand-name{
-  color: #00B8BC;
-}
-
-html[data-theme="light"] .footer-brand::before{
-  background: rgba(0, 184, 188, 0.1);
+  color: var(--color-accent);
+  opacity: 0.8;
 }
 
 html[data-theme="light"] .footer-brand:hover .footer-brand-name{
-  color: #00A5A9;
+  opacity: 1;
 }
 
 @media (prefers-color-scheme: light){
   html:not([data-theme]) .footer-brand-name{
-    color: #00B8BC;
-  }
-  html:not([data-theme]) .footer-brand::before{
-    background: rgba(0, 184, 188, 0.1);
+    color: var(--color-accent);
+    opacity: 0.8;
   }
   html:not([data-theme]) .footer-brand:hover .footer-brand-name{
-    color: #00A5A9;
+    opacity: 1;
   }
 }
 
