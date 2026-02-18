@@ -1,4 +1,4 @@
-// ui.js — UI controls + DOM/event wiring (ES module)
+// ui.js - UI controls + DOM/event wiring (ES module)
 
 import {
   clamp,
@@ -69,11 +69,15 @@ export function createUi({dom, renderer, state, dataApi}){
     geneInput,
     geneList,
     geneHint,
+    geneHelpBtn,
 
     loadBtn,
     fileInput,
 
-    exportBtn,
+    exportToggleBtn,
+    exportDropdown,
+    exportMenu,
+    exportPngBtn,
     exportSvgBtn,
     exportScaleSel,
     umPerPxEl,
@@ -253,10 +257,10 @@ export function createUi({dom, renderer, state, dataApi}){
     }
   }
 
-  // ---------- Welcome overlay ----------
+  // ---------- Empty state ----------
   function shouldShowWelcome(){
     if(!welcomeEl) return false;
-    // Treat the built-in demo as “no user data loaded yet”.
+    // Treat the built-in demo as "no user data loaded yet".
     const isDemo = String(state.datasetName || '').toLowerCase().includes('synthetic');
     if(!isDemo) return false;
     try{
@@ -470,7 +474,7 @@ export function createUi({dom, renderer, state, dataApi}){
     const g = String(cond.gene || '').trim().toUpperCase() || 'GENE';
     const cutoff = Number(cond.cutoff);
     const c = Number.isFinite(cutoff) ? cutoff : 0;
-    const s = (cond.sense === 'neg') ? '−' : '+';
+    const s = (cond.sense === 'neg') ? '-' : '+';
     return `${g}${s} (cutoff ${c})`;
   }
 
@@ -573,7 +577,7 @@ export function createUi({dom, renderer, state, dataApi}){
     if(state.gate.conditions.length === 0){
       const empty = document.createElement('div');
       empty.className = 'note';
-      empty.textContent = 'No conditions yet. Click “Add condition” to start.';
+      empty.textContent = 'No conditions yet. Click "Add condition" to start.';
       gateRowsEl.appendChild(empty);
     }
   }
@@ -740,7 +744,10 @@ export function createUi({dom, renderer, state, dataApi}){
     updateGeneDatalist();
 
     state.datasetName = String(ds.filename || 'dataset');
-    datasetLabel.textContent = `(loaded: ${ds.filename})`;
+    if(datasetLabel){
+      datasetLabel.textContent = `Loaded: ${ds.filename}`;
+      datasetLabel.style.display = 'block';
+    }
     datasetBadgeText.innerHTML = `<strong style="color:var(--text);font-weight:600">${state.cells.length}</strong> cells • ${state.cellTypes.length} types • ${state.genePanel.length} genes`;
 
     // Once the user loads a dataset, hide the welcome overlay.
@@ -1282,20 +1289,66 @@ export function createUi({dom, renderer, state, dataApi}){
       scheduleUrlSync();
     });
 
-    // Export
-    exportBtn.addEventListener('click', ()=>{
-      exportPng().catch(err=>{
-        console.error(err);
-        setStatus(false, String(err && err.message ? err.message : err));
+    // Dropdown menu
+    let dropdownOpen = false;
+
+    function closeDropdown(){
+      if(!exportDropdown || !exportMenu) return;
+      dropdownOpen = false;
+      exportDropdown.setAttribute('aria-expanded', 'false');
+      exportMenu.setAttribute('aria-hidden', 'true');
+    }
+
+    function toggleDropdown(){
+      if(!exportDropdown || !exportMenu) return;
+      dropdownOpen = !dropdownOpen;
+      exportDropdown.setAttribute('aria-expanded', String(dropdownOpen));
+      exportMenu.setAttribute('aria-hidden', String(!dropdownOpen));
+    }
+
+    if(exportToggleBtn){
+      exportToggleBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        toggleDropdown();
       });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e)=>{
+      if(dropdownOpen && exportDropdown && !exportDropdown.contains(e.target)){
+        closeDropdown();
+      }
     });
 
-    exportSvgBtn.addEventListener('click', ()=>{
-      exportSvg().catch(err=>{
-        console.error(err);
-        setStatus(false, String(err && err.message ? err.message : err));
+    // Gene help toggle
+    if(geneHelpBtn && geneHint){
+      geneHelpBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const isHidden = geneHint.style.display === 'none' || !geneHint.style.display;
+        geneHint.style.display = isHidden ? 'block' : 'none';
       });
-    });
+    }
+
+    // Export
+    if(exportPngBtn){
+      exportPngBtn.addEventListener('click', ()=>{
+        closeDropdown();
+        exportPng().catch(err=>{
+          console.error(err);
+          setStatus(false, String(err && err.message ? err.message : err));
+        });
+      });
+    }
+
+    if(exportSvgBtn){
+      exportSvgBtn.addEventListener('click', ()=>{
+        closeDropdown();
+        exportSvg().catch(err=>{
+          console.error(err);
+          setStatus(false, String(err && err.message ? err.message : err));
+        });
+      });
+    }
 
     window.addEventListener('keydown', (e)=>{
       if(e.key === 'Escape'){
@@ -1367,11 +1420,15 @@ export function collectDom(){
     geneInput: $('gene'),
     geneList: $('genes'),
     geneHint: $('geneHint'),
+    geneHelpBtn: $('geneHelp'),
 
     loadBtn: $('load'),
     fileInput: $('file'),
 
-    exportBtn: $('exportPng'),
+    exportToggleBtn: $('exportToggle'),
+    exportDropdown: $('exportDropdown'),
+    exportMenu: $('exportMenu'),
+    exportPngBtn: $('exportPng'),
     exportSvgBtn: $('exportSvg'),
     exportScaleSel: $('exportScale'),
     umPerPxEl: $('umPerPx'),
