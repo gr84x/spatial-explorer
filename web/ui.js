@@ -58,6 +58,9 @@ export function createUi({dom, renderer, state, dataApi}){
     canvas,
     tip,
     dropEl,
+    welcomeEl,
+    welcomeUploadBtn,
+    welcomeDismissBtn,
     legendEl,
     visStatus,
     datasetLabel,
@@ -161,6 +164,28 @@ export function createUi({dom, renderer, state, dataApi}){
     } finally {
       _restoringFromUrl = false;
     }
+  }
+
+  // ---------- Welcome overlay ----------
+  function shouldShowWelcome(){
+    if(!welcomeEl) return false;
+    // Treat the built-in demo as “no user data loaded yet”.
+    const isDemo = String(state.datasetName || '').toLowerCase().includes('synthetic');
+    if(!isDemo) return false;
+    try{
+      return localStorage.getItem('spatialExplorer.welcomeDismissed') !== '1';
+    } catch {
+      return true;
+    }
+  }
+
+  function setWelcomeVisible(on){
+    if(!welcomeEl) return;
+    welcomeEl.style.display = on ? 'grid' : 'none';
+  }
+
+  function updateWelcome(){
+    setWelcomeVisible(shouldShowWelcome());
   }
 
   // ---------- Tooltip ----------
@@ -631,6 +656,10 @@ export function createUi({dom, renderer, state, dataApi}){
     datasetLabel.textContent = `(loaded: ${ds.filename})`;
     datasetBadgeText.innerHTML = `<strong style="color:var(--text);font-weight:600">${state.cells.length}</strong> cells • ${state.cellTypes.length} types • ${state.genePanel.length} genes`;
 
+    // Once the user loads a dataset, hide the welcome overlay.
+    try{ localStorage.setItem('spatialExplorer.welcomeDismissed', '1'); } catch {}
+    updateWelcome();
+
     renderer.resetViewToFit();
     hideTip();
 
@@ -904,6 +933,16 @@ export function createUi({dom, renderer, state, dataApi}){
       geneTimer = setTimeout(()=>setGeneQuery(geneInput.value), 60);
     });
 
+    if(welcomeUploadBtn){
+      welcomeUploadBtn.addEventListener('click', ()=> fileInput.click());
+    }
+    if(welcomeDismissBtn){
+      welcomeDismissBtn.addEventListener('click', ()=>{
+        try{ localStorage.setItem('spatialExplorer.welcomeDismissed', '1'); } catch {}
+        updateWelcome();
+      });
+    }
+
     loadBtn.addEventListener('click', ()=> fileInput.click());
     fileInput.addEventListener('change', async ()=>{
       const f = fileInput.files && fileInput.files[0];
@@ -1103,6 +1142,7 @@ export function createUi({dom, renderer, state, dataApi}){
     updateGeneDatalist();
     setSelected(null);
     updateLegendCounts();
+    updateWelcome();
 
     // Restore URL state after first layout.
     _restoringFromUrl = true;
@@ -1136,6 +1176,9 @@ export function collectDom(){
     glCanvas: $('gl'),
     tip: $('tip'),
     dropEl: $('drop'),
+    welcomeEl: $('welcome'),
+    welcomeUploadBtn: $('welcomeUpload'),
+    welcomeDismissBtn: $('welcomeDismiss'),
     legendEl: $('legend'),
     visStatus: $('visStatus'),
     datasetLabel: $('datasetLabel'),

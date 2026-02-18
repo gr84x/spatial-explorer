@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Spatial Transcriptomics Explorer (Demo)</title>
+  <title>Spatial Explorer</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,12 +16,11 @@
     <header>
       <div class="titleblock">
         <h1>
-          Spatial Transcriptomics Explorer
-          <span id="datasetLabel" style="color:var(--color-muted);font-weight:500">(synthetic demo)</span>
+          Spatial Explorer
+          <span id="datasetLabel" class="tagline">(synthetic demo)</span>
         </h1>
         <p>
-          Spatial transcriptomics measures gene expression while keeping each cell’s location in the tissue.
-          This mini explorer mimics what you’d do on a real section: map cell types, query marker genes, and inspect single-cell profiles.
+          Visualize spatial biology data: map cell types, query marker genes, and inspect per-cell profiles.
         </p>
       </div>
 
@@ -44,7 +43,10 @@
           </div>
 
           <div class="controls">
-            <button class="btn btn--primary" id="load" title="Load a CSV/TSV file (or drag & drop onto the plot)">Load CSV/TSV</button>
+            <button class="btn btn--primary btn--cta" id="load" title="Upload a CSV/TSV file (or drag & drop onto the plot)">Upload CSV/TSV</button>
+            <div class="uploadHelp" id="uploadHelp">
+              Drag &amp; drop onto the plot, or upload a file with <strong>cell_id</strong>, <strong>x</strong>, <strong>y</strong> (optional <strong>cell_type</strong>; other columns = genes).
+            </div>
             <input id="file" type="file" accept=".csv,.tsv,text/csv,text/tab-separated-values" style="display:none" />
             <button class="btn" id="reset">Reset view</button>
             <button class="btn" id="zin" title="Zoom in">+</button>
@@ -70,6 +72,22 @@
         </div>
 
         <div class="canvasWrap">
+          <div id="welcome" class="welcomeOverlay" aria-label="Welcome">
+            <div class="welcomeCard">
+              <div class="welcomeTitle">Upload your dataset to begin</div>
+              <div class="welcomeText">
+                This page is showing a small <strong>synthetic demo</strong>. Upload a CSV/TSV to visualize your own spatial data.
+              </div>
+              <div class="welcomeActions">
+                <button class="btn btn--primary btn--cta" id="welcomeUpload">Upload CSV/TSV</button>
+                <button class="btn" id="welcomeDismiss" title="Hide this message">Hide</button>
+              </div>
+              <div class="welcomeFootnote">
+                Required columns: <strong>cell_id</strong>, <strong>x</strong>, <strong>y</strong>. Optional: <strong>cell_type</strong>. Remaining columns are treated as gene expression.
+              </div>
+            </div>
+          </div>
+
           <canvas id="gl" aria-hidden="true"></canvas>
           <canvas id="c" aria-label="Tissue scatterplot" role="img"></canvas>
           <div class="tooltip" id="tip"></div>
