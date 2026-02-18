@@ -100,6 +100,16 @@ export function createUi({dom, renderer, state, dataApi}){
     zinBtn,
     zoutBtn,
     themeToggleBtn,
+
+    feedbackBtn,
+    feedbackModal,
+    feedbackCloseBtn,
+    feedbackNameEl,
+    feedbackEmailEl,
+    feedbackMsgEl,
+    feedbackSendBtn,
+    feedbackCopyBtn,
+    feedbackStatusEl,
   } = dom;
 
   let _restoringFromUrl = false;
@@ -783,8 +793,8 @@ export function createUi({dom, renderer, state, dataApi}){
     // background: radial-gradient(900px 600px at 50% 45%, rgba(255,255,255,.04), rgba(0,0,0,0) 55%)
     // with a solid dark base.
     ctx.save();
-    const root = getComputedStyle(document.documentElement);
-    const base = (root.getPropertyValue('--canvas-base') || '#0a0a0a').trim();
+    const rootStyle = getComputedStyle(document.documentElement);
+    const base = (rootStyle.getPropertyValue('--canvas-base') || '#0a0a0a').trim();
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, w, h);
 
@@ -793,9 +803,9 @@ export function createUi({dom, renderer, state, dataApi}){
 
     // Scale the gradient size with the viewport, but keep a similar feel.
     const r = Math.max(1, Math.min(Math.max(w, h) * 0.95, 950));
-    const root = getComputedStyle(document.documentElement);
-    const glow0 = (root.getPropertyValue('--canvas-glow-0') || 'rgba(255,255,255,0.04)').trim();
-    const glow1 = (root.getPropertyValue('--canvas-glow-1') || 'rgba(0,0,0,0)').trim();
+    const rootStyle2 = getComputedStyle(document.documentElement);
+    const glow0 = (rootStyle2.getPropertyValue('--canvas-glow-0') || 'rgba(255,255,255,0.04)').trim();
+    const glow1 = (rootStyle2.getPropertyValue('--canvas-glow-1') || 'rgba(0,0,0,0)').trim();
 
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
     g.addColorStop(0.0, glow0);
@@ -1004,6 +1014,87 @@ export function createUi({dom, renderer, state, dataApi}){
   function bind(){
     initTheme();
 
+    // ---------- Feedback modal (mailto) ----------
+    let _feedbackOpen = false;
+    let _prevBodyOverflow = '';
+
+    function setFeedbackStatus(msg){
+      if(!feedbackStatusEl) return;
+      feedbackStatusEl.textContent = msg || '';
+    }
+
+    function feedbackMailto(){
+      const name = String(feedbackNameEl && feedbackNameEl.value ? feedbackNameEl.value : '').trim();
+      const email = String(feedbackEmailEl && feedbackEmailEl.value ? feedbackEmailEl.value : '').trim();
+      const message = String(feedbackMsgEl && feedbackMsgEl.value ? feedbackMsgEl.value : '').trim();
+
+      const subject = 'Spatial Explorer feedback';
+      const lines = [
+        'Message:',
+        message || '(no message)',
+        '',
+        '---',
+        `Name: ${name || '(not provided)'}`,
+        `Email: ${email || '(not provided)'}`,
+        `Page: ${location.href}`,
+      ];
+      const body = lines.join('\\n');
+
+      return `mailto:fox@gr84x.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
+    function openFeedback(){
+      if(!feedbackModal) return;
+      _feedbackOpen = true;
+      _prevBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      feedbackModal.style.display = 'grid';
+      setFeedbackStatus('');
+      // focus message for speed
+      if(feedbackMsgEl) feedbackMsgEl.focus();
+      else if(feedbackSendBtn) feedbackSendBtn.focus();
+    }
+
+    function closeFeedback(){
+      if(!feedbackModal) return;
+      _feedbackOpen = false;
+      feedbackModal.style.display = 'none';
+      document.body.style.overflow = _prevBodyOverflow;
+      if(feedbackBtn) feedbackBtn.focus();
+    }
+
+    if(feedbackBtn && feedbackModal){
+      feedbackBtn.addEventListener('click', openFeedback);
+    }
+    if(feedbackCloseBtn){
+      feedbackCloseBtn.addEventListener('click', closeFeedback);
+    }
+    if(feedbackModal){
+      const backdrop = feedbackModal.querySelector('[data-close="1"]');
+      if(backdrop) backdrop.addEventListener('click', closeFeedback);
+    }
+
+    if(feedbackSendBtn){
+      feedbackSendBtn.addEventListener('click', ()=>{
+        const href = feedbackMailto();
+        setFeedbackStatus('Opening your email client…');
+        // Using location.href is the most reliable for mailto.
+        window.location.href = href;
+      });
+    }
+
+    if(feedbackCopyBtn){
+      feedbackCopyBtn.addEventListener('click', async ()=>{
+        const href = feedbackMailto();
+        try{
+          await navigator.clipboard.writeText(href);
+          setFeedbackStatus('Copied mailto link to clipboard.');
+        } catch {
+          prompt('Copy this mailto link:', href);
+        }
+      });
+    }
+
     // persisted calibration
     try{
       const saved = localStorage.getItem('spatialExplorer.umPerPixel');
@@ -1208,6 +1299,10 @@ export function createUi({dom, renderer, state, dataApi}){
 
     window.addEventListener('keydown', (e)=>{
       if(e.key === 'Escape'){
+        if(_feedbackOpen){
+          closeFeedback();
+          return;
+        }
         state.selectedId = null;
         setSelected(null);
         geneInput.value = '';
@@ -1303,5 +1398,15 @@ export function collectDom(){
     zinBtn: $('zin'),
     zoutBtn: $('zout'),
     themeToggleBtn: $('themeToggle'),
+
+    feedbackBtn: $('feedbackBtn'),
+    feedbackModal: $('feedbackModal'),
+    feedbackCloseBtn: $('feedbackClose'),
+    feedbackNameEl: $('feedbackName'),
+    feedbackEmailEl: $('feedbackEmail'),
+    feedbackMsgEl: $('feedbackMsg'),
+    feedbackSendBtn: $('feedbackSend'),
+    feedbackCopyBtn: $('feedbackCopy'),
+    feedbackStatusEl: $('feedbackStatus'),
   };
 }

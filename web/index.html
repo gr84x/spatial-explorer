@@ -52,6 +52,7 @@
             <button class="btn" id="zin" title="Zoom in">+</button>
             <button class="btn" id="zout" title="Zoom out">−</button>
             <button class="btn" id="themeToggle" title="Toggle light/dark theme" aria-label="Toggle theme">Theme</button>
+            <button class="btn" id="feedbackBtn" title="Send feedback" aria-label="Send feedback">Feedback</button>
 
             <label class="formRow" title="Calibration: microns per source pixel (x/y units). Used for the on-canvas scale bar.">
               µm/px
@@ -175,6 +176,38 @@
     <footer class="siteFooter" aria-label="Brand footer">
       <a href="https://gr84x.com" target="_blank" rel="noopener noreferrer">a gr84x experience</a>
     </footer>
+  </div>
+
+  <!-- Feedback modal -->
+  <div id="feedbackModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" style="display:none">
+    <div class="modal__backdrop" data-close="1"></div>
+    <div class="modal__panel" role="document">
+      <div class="modal__header">
+        <div>
+          <div id="feedbackTitle" class="modal__title">Send feedback</div>
+          <div class="modal__subtitle">This opens your email client (mailto).</div>
+        </div>
+        <button class="btn" id="feedbackClose" title="Close" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal__body">
+        <label class="modal__label" for="feedbackName">Name</label>
+        <input class="modal__input" id="feedbackName" type="text" autocomplete="name" placeholder="Optional" />
+
+        <label class="modal__label" for="feedbackEmail">Email</label>
+        <input class="modal__input" id="feedbackEmail" type="email" autocomplete="email" inputmode="email" placeholder="Optional" />
+
+        <label class="modal__label" for="feedbackMsg">Message</label>
+        <textarea class="modal__textarea" id="feedbackMsg" rows="6" placeholder="What should we improve?"></textarea>
+
+        <div class="modal__actions">
+          <button class="btn btn--primary" id="feedbackSend">Open email</button>
+          <button class="btn" id="feedbackCopy" title="Copy a mailto link (fallback)">Copy link</button>
+        </div>
+
+        <div class="note" id="feedbackStatus" style="margin-top:10px"></div>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="app.js"></script>

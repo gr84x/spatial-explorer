@@ -560,3 +560,67 @@ html[data-theme="light"] .barTrack{ background: rgba(2,6,23,.06); border-color: 
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{ transition:none !important; animation:none !important; }
 }
+
+
+/* Feedback modal */
+.modal{
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: var(--space-2);
+}
+
+.modal__backdrop{
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,.55);
+}
+
+html[data-theme="light"] .modal__backdrop{ background: rgba(2,6,23,.38); }
+@media (prefers-color-scheme: light){
+  html:not([data-theme]) .modal__backdrop{ background: rgba(2,6,23,.38); }
+}
+
+.modal__panel{
+  position: relative;
+  width: min(560px, 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.modal__header{
+  display:flex;
+  justify-content: space-between;
+  align-items:flex-start;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal__title{ font-size: 14px; font-weight: 700; }
+.modal__subtitle{ font-size: 12px; color: var(--color-muted); margin-top: 2px; }
+
+.modal__body{ padding: var(--space-2); display:flex; flex-direction:column; gap: 8px; }
+
+.modal__label{ font-size: 12px; color: var(--color-muted); }
+
+.modal__input, .modal__textarea{
+  width: 100%;
+  background: var(--color-control-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 10px;
+  color: var(--color-text);
+  font-size: 12px;
+  outline: none;
+}
+
+.modal__textarea{ resize: vertical; min-height: 120px; }
+
+.modal__actions{ display:flex; gap: var(--space-1); flex-wrap:wrap; margin-top: 6px; }
