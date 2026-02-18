@@ -16,6 +16,8 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
   let _raf = 0;
   let _needs = false;
   let _lastRect = null;
+  let _lastCssW = null;
+  let _lastCssH = null;
 
   // tiny perf telemetry (used for PERF_NOTES + optional UI display)
   const perf = {
@@ -51,16 +53,31 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
     const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
     const rect = canvas.getBoundingClientRect();
 
+    // Persist the current CSS pixel size so we can detect layout-driven resizes
+    // (e.g. fonts finishing loading / flex reflow) that don't emit a window
+    // resize event.
+    _lastCssW = rect.width;
+    _lastCssH = rect.height;
+
+    // Round to nearest device pixel to reduce CSS stretching due to fractional
+    // backing store sizes.
+    const pxW = Math.max(1, Math.round(rect.width * dpr));
+    const pxH = Math.max(1, Math.round(rect.height * dpr));
+
+    // Use the *actual* backing-store-to-CSS scale for each axis.
+    const sx = pxW / Math.max(1e-6, rect.width);
+    const sy = pxH / Math.max(1e-6, rect.height);
+
     // Overlay 2D canvas (interaction + annotation)
-    canvas.width = Math.floor(rect.width * dpr);
-    canvas.height = Math.floor(rect.height * dpr);
+    canvas.width = pxW;
+    canvas.height = pxH;
     const ctx = canvas.getContext('2d');
-    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.setTransform(sx,0,0,sy,0,0);
 
     // WebGL underlay canvas (points)
     if(glCanvas && glBackend){
-      glCanvas.width = Math.floor(rect.width * dpr);
-      glCanvas.height = Math.floor(rect.height * dpr);
+      glCanvas.width = pxW;
+      glCanvas.height = pxH;
       glBackend.resizeViewport();
     }
 
@@ -514,6 +531,16 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
   function render(){
     const t0 = now();
     const rect = canvas.getBoundingClientRect();
+
+    // Layout changes can resize the canvas without triggering a window resize
+    // event (e.g. web fonts loading, flex wrapping). If the backing store size
+    // doesn't match the displayed CSS size, the browser will scale the bitmap
+    // and circles can appear as ellipses.
+    if(_lastCssW == null || _lastCssH == null || Math.abs(rect.width - _lastCssW) > 0.5 || Math.abs(rect.height - _lastCssH) > 0.5){
+      resizeCanvas({initial:false});
+      return;
+    }
+
     _lastRect = rect;
 
     if(glBackend && glCanvas){
