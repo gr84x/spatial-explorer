@@ -1,10 +1,18 @@
 // data.js — Spatial Explorer data loading/parsing + gate evaluation (ES module)
 
 // ---------- Math / helpers ----------
+/** Clamp a number to the inclusive range [a, b]. */
 export function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+
+/** Linear interpolation. */
 export function lerp(a,b,t){ return a + (b-a)*t; }
 
 // ---------- RNG (deterministic; used for synthetic dataset) ----------
+/**
+ * Deterministic PRNG.
+ * @param {number} seed
+ * @returns {() => number} rand function that returns a float in [0, 1)
+ */
 export function mulberry32(seed){
   let a = seed >>> 0;
   return function(){
@@ -15,6 +23,13 @@ export function mulberry32(seed){
   };
 }
 
+/**
+ * Create a deterministic standard-normal generator from a uniform PRNG.
+ * Uses Box–Muller.
+ *
+ * @param {() => number} rand - Uniform RNG in [0, 1).
+ * @returns {() => number} randn - Standard normal N(0,1).
+ */
 export function makeRandn(rand){
   return function randn(){
     // Box-Muller
@@ -26,13 +41,19 @@ export function makeRandn(rand){
 }
 
 // ---------- Color + palette ----------
+/**
+ * Parse a #RRGGBB or #RGB hex color to an {r,g,b} object.
+ * @param {string} hex
+ */
 export function hexToRgb(hex){
   const h = String(hex || '#000').replace('#','').trim();
   const v = parseInt(h.length===3 ? h.split('').map(ch=>ch+ch).join('') : h, 16);
   return {r:(v>>16)&255,g:(v>>8)&255,b:v&255};
 }
+/** Convert an {r,g,b} + alpha into a CSS rgba(...) string. */
 export function rgba(rgb,a){ return `rgba(${rgb.r},${rgb.g},${rgb.b},${a})`; }
 
+/** Get a deterministic categorical color from a small palette. */
 export function palette(i){
   const pal = [
     '#60a5fa','#34d399','#fbbf24','#fb7185','#a78bfa','#38bdf8','#f472b6',
@@ -42,6 +63,7 @@ export function palette(i){
 }
 
 // ---------- Spatial helper ----------
+/** Map normalized radius (0..1) into a human-friendly neighborhood label. */
 export function zoneLabel(rNorm){
   if(rNorm < 0.35) return 'core';
   if(rNorm < 0.70) return 'mid';
@@ -53,6 +75,12 @@ export function zoneLabel(rNorm){
 // Indices are static per dataset and cheap to query.
 
 // (A) Uniform grid (very fast for near-uniform density; used as fallback)
+/**
+ * Build a uniform grid index for fast spatial candidate lookup.
+ *
+ * @param {{id:number,x:number,y:number}[]} cells
+ * @param {{cellSize?:number}} [opts]
+ */
 export function buildSpatialIndex(cells, {cellSize=0.04} = {}){
   const n = cells.length;
   if(n === 0) return {kind:'grid', cellSize, minX:0, minY:0, nx:0, ny:0, buckets:[]};
@@ -91,6 +119,10 @@ export function buildSpatialIndex(cells, {cellSize=0.04} = {}){
   return {kind:'grid', cellSize, minX, minY, nx, ny, buckets};
 }
 
+/**
+ * Query a grid index to obtain the bucket range to inspect for a circle query.
+ * Returns null if the index is invalid.
+ */
 export function querySpatialIndex(index, x, y, r){
   if(!index || index.kind !== 'grid' || !index.nx || !index.ny) return null;
   const {cellSize, minX, minY, nx, ny} = index;
@@ -105,6 +137,11 @@ export function querySpatialIndex(index, x, y, r){
 
 // (B) Quadtree (better for clustered / non-uniform densities)
 // Stores ids in leaves; nodes subdivide until maxItems or maxDepth.
+/**
+ * Build a quadtree index for fast spatial candidate iteration.
+ *
+ * Assumes cell ids are 1-based and correspond to their position in `cells`.
+ */
 export function buildQuadtreeIndex(cells, {maxItems=48, maxDepth=12, pad=0.02} = {}){
   const n = cells.length;
   if(n === 0){
@@ -173,6 +210,10 @@ function _aabbIntersectsCircle(x0,y0,x1,y1, cx,cy, r){
   return (rx*rx + ry*ry) <= (r*r);
 }
 
+/**
+ * Visit candidate cell ids that may fall within a circle query.
+ * The callback receives a cell id (1-based).
+ */
 export function forEachQuadtreeCandidate(index, cx, cy, r, fn){
   if(!index || index.kind !== 'quadtree' || !index.root) return;
   const stack = [index.root];
@@ -189,6 +230,10 @@ export function forEachQuadtreeCandidate(index, cx, cy, r, fn){
   }
 }
 
+/**
+ * Compute and attach rNorm (normalized radius) for each cell based on x/y.
+ * Mutates the cell objects.
+ */
 export function computeRNormFromXY(cells){
   let maxR = 1e-9;
   for(const c of cells){
@@ -200,11 +245,13 @@ export function computeRNormFromXY(cells){
   }
 }
 
+/** Build a case-insensitive gene symbol -> index map for a gene panel. */
 export function buildGeneIndex(genePanel){
   return new Map(genePanel.map((g,i)=>[String(g).toUpperCase(), i]));
 }
 
 // ---------- Demo biology (synthetic dataset only) ----------
+/** Demo-only: return the list of synthetic cell types and their display colors. */
 export function makeDemoCellTypes(){
   return [
     {key:"Tumor",          color:"#fb7185"},
@@ -217,6 +264,7 @@ export function makeDemoCellTypes(){
   ];
 }
 
+/** Demo-only: return the synthetic gene panel used to generate expression values. */
 export function makeDemoGenePanel(){
   return [
     "EPCAM","KRT8","KRT18","MKI67","VIM",
@@ -320,6 +368,13 @@ function exprForDemo(rand, randn, cellType, rNorm, genePanel, geneIndex, geneBas
   return e;
 }
 
+/**
+ * Demo-only: generate a synthetic spatial dataset.
+ *
+ * @param {number} n
+ * @param {string[]} genePanel
+ * @param {{seed?: number}} [opts]
+ */
 export function generateDemoCells(n, genePanel, {seed=0xC0FFEE} = {}){
   const rand = mulberry32(seed);
   const randn = makeRandn(rand);
@@ -362,18 +417,26 @@ export function generateDemoCells(n, genePanel, {seed=0xC0FFEE} = {}){
 }
 
 // ---------- CSV/TSV loading (simple fast parser; no quoted-field support) ----------
+/** Normalize a header name (case/whitespace) for robust parsing. */
 export function normalizeHeader(h){
   return String(h || '').trim().replace(/^\uFEFF/, '');
 }
 
+/** Infer delimiter from the header line (tab vs comma). */
 export function inferDelimiter(headerLine){
   return headerLine.includes('\t') ? '\t' : ',';
 }
 
+/** Split a simple delimited line (CSV/TSV-lite; no quoted-field support). */
 export function splitLine(line, delim){
   return line.split(delim).map(s => s.trim());
 }
 
+/**
+ * Parse a CSV/TSV dataset and return the normalized structure consumed by the app.
+ *
+ * Remaining non-required columns are treated as gene expression.
+ */
 export function buildLoadedDataset(text, filename){
   const lines = text.split(/\r?\n/).filter(l => l.trim().length>0);
   if(lines.length < 2) throw new Error('File has no data rows.');
@@ -456,6 +519,7 @@ export function buildLoadedDataset(text, filename){
 }
 
 // ---------- Gate helpers (boolean gating) ----------
+/** Convert a 0-based condition index into a label (A, B, C, ...). */
 export function gateLabelForIndex(i){
   // A, B, ... Z, AA, AB, ...
   let n = i;
@@ -469,6 +533,7 @@ export function gateLabelForIndex(i){
   return s;
 }
 
+/** Normalize a free-form boolean expression into canonical tokens (AND/OR/NOT). */
 export function normalizeGateExpr(raw){
   let s = String(raw || '').trim();
   if(!s) return '';
@@ -479,6 +544,7 @@ export function normalizeGateExpr(raw){
   return s;
 }
 
+/** Tokenize a normalized gate expression into operators, parentheses, and labels. */
 export function tokenizeGateExpr(expr){
   const s = normalizeGateExpr(expr).toUpperCase();
   if(s === '') return [];
@@ -491,6 +557,7 @@ export function tokenizeGateExpr(expr){
   return tokens;
 }
 
+/** Compile gate tokens to postfix (RPN) using shunting-yard precedence rules. */
 export function compileGateToPostfix(tokens){
   // Shunting-yard for operators: NOT > AND > OR
   const out = [];
@@ -573,6 +640,11 @@ function applyOr(a,b){
   return out;
 }
 
+/**
+ * Evaluate a phenotype gate expression against the given cells.
+ *
+ * @returns {{mask: Uint8Array|null, matchCount:number, error: string|null, missingGenes: string[]}}
+ */
 export function evaluateGate({cells, geneIndex, gateEnabled, gateConditions, gateExpr}){
   // Returns: { mask: Uint8Array|null, matchCount: number, error: string|null }
   const enabled = !!gateEnabled;
@@ -635,6 +707,7 @@ export function evaluateGate({cells, geneIndex, gateEnabled, gateConditions, gat
 }
 
 // ---------- Filename helpers (exports) ----------
+/** Sanitize an arbitrary string into a filesystem-friendly filename segment. */
 export function sanitizeForFilename(s){
   return String(s || '')
     .trim()
@@ -644,6 +717,7 @@ export function sanitizeForFilename(s){
     .replace(/^-|-$/g,'');
 }
 
+/** Build an ISO-like timestamp safe for filenames (no colons). */
 export function timestampForFilename(d = new Date()){
   return d.toISOString().replace(/[:]/g,'').replace(/\.\d{3}Z$/,'Z').replace('T','_');
 }

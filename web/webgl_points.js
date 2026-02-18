@@ -115,6 +115,13 @@ void main(){
   outColor = uGateColor;
 }`;
 
+/**
+ * Create a WebGL2-based point renderer.
+ * Returns null if WebGL2 is unavailable.
+ *
+ * @param {object} args
+ * @param {HTMLCanvasElement} args.canvas
+ */
 export function createWebGLPointsRenderer({canvas}){
   const gl = canvas.getContext('webgl2', {
     alpha: true,

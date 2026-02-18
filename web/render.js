@@ -5,6 +5,16 @@ import { now, ema } from './perf.js';
 import { computeScaleBar } from './scale_bar.js';
 import { createWebGLPointsRenderer } from './webgl_points.js';
 
+/**
+ * Create the renderer responsible for drawing, hit-testing (picking), and
+ * maintaining the current view transform.
+ *
+ * @param {object} args
+ * @param {HTMLCanvasElement} args.canvas - 2D overlay canvas.
+ * @param {HTMLCanvasElement | null} [args.glCanvas=null] - Optional WebGL underlay canvas.
+ * @param {() => object} args.getState - Getter for the mutable app state.
+ * @param {() => void} [args.onLegendCounts] - Callback to refresh legend counts.
+ */
 export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}){
   // canvas: 2D overlay (interaction + boundary/text/scale bar)
   // glCanvas: optional WebGL canvas underlay for fast point rendering
