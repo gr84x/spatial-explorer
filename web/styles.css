@@ -827,7 +827,6 @@ html[data-theme="light"] .barTrack{ background: rgba(2,6,23,.06); border-color: 
   gap: 6px;
   font-size: 11px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   font-weight: 500;
 }
 
