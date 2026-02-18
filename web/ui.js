@@ -96,10 +96,87 @@ export function createUi({dom, renderer, state, dataApi}){
     resetBtn,
     zinBtn,
     zoutBtn,
+    themeToggleBtn,
   } = dom;
 
   let _restoringFromUrl = false;
   let _urlSyncTimer = null;
+
+  // ---------- Theme (light/dark) ----------
+  const THEME_KEY = 'spatialExplorer.theme';
+  const mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+
+  function systemTheme(){
+    return (mql && mql.matches) ? 'light' : 'dark';
+  }
+
+  function appliedTheme(){
+    const t = document.documentElement.getAttribute('data-theme');
+    return (t === 'light' || t === 'dark') ? t : null;
+  }
+
+  function effectiveTheme(){
+    return appliedTheme() || systemTheme();
+  }
+
+  function setThemePreference(pref){
+    // pref: 'light' | 'dark' | null (null => follow system)
+    if(pref === 'light' || pref === 'dark'){
+      document.documentElement.setAttribute('data-theme', pref);
+      try{ localStorage.setItem(THEME_KEY, pref); } catch {}
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      try{ localStorage.removeItem(THEME_KEY); } catch {}
+    }
+    updateThemeToggleLabel();
+    renderer.requestRender();
+  }
+
+  function updateThemeToggleLabel(){
+    if(!themeToggleBtn) return;
+    const eff = effectiveTheme();
+    const next = eff === 'light' ? 'dark' : 'light';
+    themeToggleBtn.textContent = next === 'light' ? 'Light' : 'Dark';
+    themeToggleBtn.setAttribute('aria-label', `Switch to ${next} theme`);
+    themeToggleBtn.title = `Switch to ${next} theme`;
+  }
+
+  function initTheme(){
+    let saved = null;
+    try{ saved = localStorage.getItem(THEME_KEY); } catch {}
+    if(saved === 'light' || saved === 'dark'){
+      document.documentElement.setAttribute('data-theme', saved);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    updateThemeToggleLabel();
+
+    if(themeToggleBtn){
+      themeToggleBtn.addEventListener('click', ()=>{
+        const eff = effectiveTheme();
+        setThemePreference(eff === 'light' ? 'dark' : 'light');
+      });
+
+      themeToggleBtn.addEventListener('contextmenu', (e)=>{
+        // Right click resets to system preference.
+        e.preventDefault();
+        setThemePreference(null);
+      });
+    }
+
+    // Keep in sync with system changes when user follows system.
+    if(mql){
+      const handler = ()=>{
+        if(appliedTheme() == null){
+          updateThemeToggleLabel();
+          renderer.requestRender();
+        }
+      };
+      // addEventListener is preferred, but Safari still uses addListener.
+      if(typeof mql.addEventListener === 'function') mql.addEventListener('change', handler);
+      else if(typeof mql.addListener === 'function') mql.addListener(handler);
+    }
+  }
 
   function scheduleUrlSync(){
     if(_restoringFromUrl) return;
@@ -374,7 +451,7 @@ export function createUi({dom, renderer, state, dataApi}){
       row.style.alignItems = 'center';
 
       const joinSel = document.createElement('select');
-      joinSel.style.cssText = 'background:rgba(10,10,10,.50);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:7px 8px;font-size:12px;';
+      joinSel.style.cssText = 'background:var(--color-control-bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:7px 8px;font-size:12px;';
       ['AND','OR'].forEach(v=>{
         const opt = document.createElement('option');
         opt.value = v;
@@ -390,10 +467,10 @@ export function createUi({dom, renderer, state, dataApi}){
       geneIn.setAttribute('list', 'genes');
       geneIn.spellcheck = false;
       geneIn.autocomplete = 'off';
-      geneIn.style.cssText = 'flex:1;min-width:120px;background:rgba(0,0,0,0);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:7px 8px;color:var(--text);font-size:12px;outline:none;';
+      geneIn.style.cssText = 'flex:1;min-width:120px;background:rgba(0,0,0,0);border:1px solid var(--border);border-radius:10px;padding:7px 8px;color:var(--text);font-size:12px;outline:none;';
 
       const senseSel = document.createElement('select');
-      senseSel.style.cssText = 'background:rgba(10,10,10,.50);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:7px 8px;font-size:12px;';
+      senseSel.style.cssText = 'background:var(--color-control-bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:7px 8px;font-size:12px;';
       [{v:'pos',t:'+'},{v:'neg',t:'-'}].forEach(o=>{
         const opt = document.createElement('option');
         opt.value = o.v;
@@ -407,7 +484,7 @@ export function createUi({dom, renderer, state, dataApi}){
       cutoffIn.step = '0.1';
       cutoffIn.value = String(Number.isFinite(Number(cond.cutoff)) ? cond.cutoff : 0.5);
       cutoffIn.title = 'Expression cutoff';
-      cutoffIn.style.cssText = 'width:74px;background:rgba(0,0,0,0);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:7px 8px;color:var(--text);font-size:12px;outline:none;';
+      cutoffIn.style.cssText = 'width:74px;background:rgba(0,0,0,0);border:1px solid var(--border);border-radius:10px;padding:7px 8px;color:var(--text);font-size:12px;outline:none;';
 
       const lab = document.createElement('div');
       lab.style.cssText = 'min-width:22px;font-weight:650;color:var(--text);font-size:12px;';
@@ -677,7 +754,9 @@ export function createUi({dom, renderer, state, dataApi}){
     // background: radial-gradient(900px 600px at 50% 45%, rgba(255,255,255,.04), rgba(0,0,0,0) 55%)
     // with a solid dark base.
     ctx.save();
-    ctx.fillStyle = '#0a0a0a';
+    const root = getComputedStyle(document.documentElement);
+    const base = (root.getPropertyValue('--canvas-base') || '#0a0a0a').trim();
+    ctx.fillStyle = base;
     ctx.fillRect(0, 0, w, h);
 
     const cx = w * 0.5;
@@ -685,10 +764,14 @@ export function createUi({dom, renderer, state, dataApi}){
 
     // Scale the gradient size with the viewport, but keep a similar feel.
     const r = Math.max(1, Math.min(Math.max(w, h) * 0.95, 950));
+    const root = getComputedStyle(document.documentElement);
+    const glow0 = (root.getPropertyValue('--canvas-glow-0') || 'rgba(255,255,255,0.04)').trim();
+    const glow1 = (root.getPropertyValue('--canvas-glow-1') || 'rgba(0,0,0,0)').trim();
+
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-    g.addColorStop(0.0, 'rgba(255,255,255,0.04)');
-    g.addColorStop(0.55, 'rgba(0,0,0,0)');
-    g.addColorStop(1.0, 'rgba(0,0,0,0)');
+    g.addColorStop(0.0, glow0);
+    g.addColorStop(0.55, glow1);
+    g.addColorStop(1.0, glow1);
 
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
@@ -890,6 +973,8 @@ export function createUi({dom, renderer, state, dataApi}){
 
   // ---------- Interaction wiring ----------
   function bind(){
+    initTheme();
+
     // persisted calibration
     try{
       const saved = localStorage.getItem('spatialExplorer.umPerPixel');
@@ -1174,5 +1259,6 @@ export function collectDom(){
     resetBtn: $('reset'),
     zinBtn: $('zin'),
     zoutBtn: $('zout'),
+    themeToggleBtn: $('themeToggle'),
   };
 }
