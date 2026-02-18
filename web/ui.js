@@ -260,14 +260,17 @@ export function createUi({dom, renderer, state, dataApi}){
   // ---------- Empty state ----------
   function shouldShowWelcome(){
     if(!welcomeEl) return false;
-    // Treat the built-in demo as "no user data loaded yet".
-    const isDemo = String(state.datasetName || '').toLowerCase().includes('synthetic');
-    if(!isDemo) return false;
+    // Only show welcome overlay when there's NO data loaded at all.
+    // Once demo data is showing (or user data is loaded), hide the overlay.
+    // The demo IS data - user should see the visualization, not be blocked by the overlay.
     try{
-      return localStorage.getItem('spatialExplorer.welcomeDismissed') !== '1';
-    } catch {
-      return true;
-    }
+      const dismissed = localStorage.getItem('spatialExplorer.welcomeDismissed') === '1';
+      if(dismissed) return false;
+    } catch {}
+    
+    // If we have cells loaded (demo or real data), don't show the welcome overlay.
+    // The overlay is ONLY for the true empty state (no data at all).
+    return state.cells.length === 0;
   }
 
   function setWelcomeVisible(on){
