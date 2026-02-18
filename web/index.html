@@ -51,6 +51,7 @@
             <button class="btn" id="reset">Reset view</button>
             <button class="btn" id="zin" title="Zoom in">+</button>
             <button class="btn" id="zout" title="Zoom out">−</button>
+            <button class="btn" id="themeToggle" title="Toggle light/dark theme" aria-label="Toggle theme">Theme</button>
 
             <label class="formRow" title="Calibration: microns per source pixel (x/y units). Used for the on-canvas scale bar.">
               µm/px
@@ -127,7 +128,7 @@
 
           <div style="margin-top:10px">
             <div class="k" style="margin-bottom:6px">Expression</div>
-            <input id="gateExpr" spellcheck="false" autocomplete="off" placeholder="A AND (B OR NOT C)" style="width:100%;background:rgba(10,10,10,.55);border:1px solid var(--color-border);border-radius:14px;padding:10px 10px;color:var(--color-text);font-size:12px;outline:none" />
+            <input id="gateExpr" class="input-pill" spellcheck="false" autocomplete="off" placeholder="A AND (B OR NOT C)" />
             <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap;">
               <label class="check" style="font-size:12px;color:var(--color-muted);">
                 <input id="gateAdvanced" type="checkbox" />

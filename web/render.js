@@ -32,6 +32,16 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
   let _glLastGateRef = null;
   let _glLastLodStride = null;
 
+  function _cssVar(name, fallback){
+    try{
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name);
+      const s = String(v || '').trim();
+      return s || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
   function worldToScreen(x,y){
     return { x: x*view.scale + view.tx, y: y*view.scale + view.ty };
   }
@@ -146,9 +156,9 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
       if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     }
     ctx.closePath();
-    ctx.fillStyle = 'rgba(255,255,255,.015)';
+    ctx.fillStyle = _cssVar('--tissue-fill', 'rgba(255,255,255,.015)');
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.07)';
+    ctx.strokeStyle = _cssVar('--tissue-stroke', 'rgba(255,255,255,.07)');
     ctx.stroke();
     ctx.restore();
   }
@@ -172,8 +182,8 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
     const bx = w - pad - boxW;
     const by = h - pad - boxH;
 
-    ctx.fillStyle = 'rgba(16,18,20,.72)';
-    ctx.strokeStyle = 'rgba(255,255,255,.12)';
+    ctx.fillStyle = _cssVar('--scalebox-bg', 'rgba(16,18,20,.72)');
+    ctx.strokeStyle = _cssVar('--scalebox-stroke', 'rgba(255,255,255,.12)');
     ctx.lineWidth = 1;
     ctx.beginPath();
     const r = 10;
@@ -188,12 +198,12 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
 
     const barX = w - pad - barPx;
     const barY = h - pad - 12;
-    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.fillStyle = _cssVar('--scalebar', 'rgba(255,255,255,.85)');
     ctx.fillRect(barX, barY, barPx, barH);
-    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.fillStyle = _cssVar('--scalebar-top', 'rgba(0,0,0,.35)');
     ctx.fillRect(barX, barY, barPx, 1);
 
-    ctx.fillStyle = 'rgba(255,255,255,.82)';
+    ctx.fillStyle = _cssVar('--scale-text', 'rgba(255,255,255,.82)');
     ctx.textBaseline = 'bottom';
     ctx.fillText(label, w - pad - textW, barY - 4);
 
@@ -309,7 +319,7 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
       ctx.arc(px, py, rPx+1.4, 0, Math.PI*2);
       ctx.fill();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = 'rgba(255,255,255,.85)';
+      ctx.strokeStyle = _cssVar('--hover-ring', 'rgba(255,255,255,.85)');
       ctx.stroke();
       ctx.restore();
     }
@@ -317,7 +327,7 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
     // corner annotation
     ctx.save();
     ctx.font = '12px ' + getComputedStyle(document.body).fontFamily;
-    ctx.fillStyle = 'rgba(255,255,255,.66)';
+    ctx.fillStyle = _cssVar('--annotation', 'rgba(255,255,255,.66)');
     const gtxt = geneIdx == null ? 'Cell type' : `Gene: ${st.genePanel[geneIdx]} (expression)`;
     ctx.fillText(gtxt, 14, h - 14);
     ctx.restore();
@@ -493,7 +503,7 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
       ctx.arc(px, py, rPx+1.4, 0, Math.PI*2);
       ctx.fill();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = 'rgba(255,255,255,.85)';
+      ctx.strokeStyle = _cssVar('--hover-ring', 'rgba(255,255,255,.85)');
       ctx.stroke();
       ctx.restore();
     }
@@ -501,7 +511,7 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
     // corner annotation
     ctx.save();
     ctx.font = '12px ' + getComputedStyle(document.body).fontFamily;
-    ctx.fillStyle = 'rgba(255,255,255,.66)';
+    ctx.fillStyle = _cssVar('--annotation', 'rgba(255,255,255,.66)');
     const gtxt = st.geneIdx == null ? 'Cell type' : `Gene: ${st.genePanel[st.geneIdx]} (expression)`;
     ctx.fillText(gtxt, 14, h - 14);
     ctx.restore();
