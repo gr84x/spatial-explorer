@@ -17,6 +17,12 @@ export function niceStep(x){
   return n * p;
 }
 
+/**
+ * Format a microns value using µm or mm depending on scale.
+ *
+ * @param {number} um
+ * @returns {string}
+ */
 export function formatLengthUm(um){
   const v = Number(um);
   if(!Number.isFinite(v)) return '';

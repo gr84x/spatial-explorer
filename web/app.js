@@ -1,6 +1,6 @@
 // app.js — Spatial Explorer demo entrypoint (ES module)
 
-import { makeDemoCellTypes, makeDemoGenePanel, buildGeneIndex, generateDemoCells, hexToRgb, buildQuadtreeIndex, buildSpatialIndex } from './data.js';
+import { makeDemoCellTypes, makeDemoGenePanel, buildGeneIndex, generateDemoCells, hexToRgb, buildQuadtreeIndex } from './data.js';
 import { createRenderer } from './render.js';
 import { collectDom, createUi } from './ui.js';
 

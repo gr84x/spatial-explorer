@@ -51,6 +51,16 @@ function readStateFromUrl(){
   return st;
 }
 
+/**
+ * Create and wire the UI controller.
+ *
+ * @param {object} args
+ * @param {ReturnType<collectDom>} args.dom - Cached DOM references.
+ * @param {object} args.renderer - Renderer instance created by {@link createRenderer}.
+ * @param {object} args.state - Mutable app state (owned by app.js).
+ * @param {object} args.dataApi - Optional hook point for non-demo data sources.
+ * @returns {{bind:Function, updateLegendCounts:Function, applyDataset:Function, loadFile:Function}}
+ */
 export function createUi({dom, renderer, state, dataApi}){
   // state is a mutable object owned by app.js
   // renderer is createRenderer(...)
@@ -1405,6 +1415,12 @@ export function createUi({dom, renderer, state, dataApi}){
   };
 }
 
+/**
+ * Collect and return the DOM elements used by the UI.
+ *
+ * Keeping this centralized avoids repeated DOM queries and makes the contract
+ * between HTML and JS explicit.
+ */
 export function collectDom(){
   const $ = (id)=> document.getElementById(id);
   return {
