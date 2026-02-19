@@ -21,6 +21,7 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
   if(!canvas) throw new Error('Renderer requires a canvas element.');
 
   const view = { scale: 240, tx: 0, ty: 0 };
+  let _pendingInitialFit = false;
 
   // rAF render scheduler (prevents redundant full redraws during fast pan/zoom/hover)
   let _raf = 0;
@@ -70,8 +71,16 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
   }
 
   function resizeCanvas({initial=false} = {}){
+    if(initial) _pendingInitialFit = true;
     const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
     const rect = canvas.getBoundingClientRect();
+
+    // If the element isn't laid out yet (e.g. display:none or still attaching),
+    // don't lock in a bogus 1×1 backing store. A ResizeObserver / later render
+    // will retrigger once layout is stable.
+    if(rect.width <= 0 || rect.height <= 0){
+      return;
+    }
 
     // Persist the current CSS pixel size so we can detect layout-driven resizes
     // (e.g. fonts finishing loading / flex reflow) that don't emit a window
@@ -101,14 +110,40 @@ export function createRenderer({canvas, glCanvas=null, getState, onLegendCounts}
       glBackend.resizeViewport();
     }
 
-    if(initial){
+    if(initial || _pendingInitialFit){
       resetViewToFit();
+      _pendingInitialFit = false;
     } else {
       // Keep the visualization centered.
       view.tx = rect.width/2;
       view.ty = rect.height/2;
     }
     requestRender();
+  }
+
+  // Keep backing store in sync with CSS size even when layout changes occur
+  // without a window resize or an interaction-driven render (e.g. web font load,
+  // sidebar wrap, container transitions). If the backing store falls out of
+  // sync, the browser stretches the canvas bitmap and circles become ellipses.
+  let _ro = null;
+  let _roRaf = 0;
+  function _scheduleObservedResize(){
+    if(_roRaf) return;
+    _roRaf = requestAnimationFrame(()=>{
+      _roRaf = 0;
+      resizeCanvas({initial:false});
+    });
+  }
+
+  if(typeof ResizeObserver === 'function'){
+    try{
+      _ro = new ResizeObserver(_scheduleObservedResize);
+      _ro.observe(canvas);
+    } catch {}
+  }
+  if(window.visualViewport && typeof window.visualViewport.addEventListener === 'function'){
+    // Mobile pinch zoom can change devicePixelRatio without a classic window resize.
+    window.visualViewport.addEventListener('resize', _scheduleObservedResize);
   }
 
   function cellRadiusPx(){
