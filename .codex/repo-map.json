@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "generated": "2026-02-19T14:05:30+00:00",
+  "commit": "988eefc4e94dcc03f7b0f87e5164f3bbe8dbf358",
+  "summary": "Spatial Explorer",
+  "stack": [
+    "node",
+    "python"
+  ],
+  "structure": {
+    "docs/": "Module / scripts",
+    "marketing/": "Module / scripts",
+    "parsers/": "Module / scripts",
+    "tests/": "Test suite",
+    "tools/": "Misc tools",
+    "web/": "Module / scripts"
+  },
+  "key_files": [
+    {
+      "path": "README.md",
+      "purpose": "Project overview",
+      "lines": 826
+    },
+    {
+      "path": "tests/test_xenium_parser.py",
+      "purpose": "Tests",
+      "lines": 53
+    },
+    {
+      "path": "tests/test_merscope_parser.py",
+      "purpose": "Tests",
+      "lines": 118
+    },
+    {
+      "path": "tests/test_visium_hd_parser.py",
+      "purpose": "Tests",
+      "lines": 98
+    },
+    {
+      "path": "tests/test_parsers_lazy_imports.py",
+      "purpose": "Tests",
+      "lines": 46
+    },
+    {
+      "path": "tools/repo_map/generate.py",
+      "purpose": "Repo-map generator",
+      "lines": 442
+    }
+  ],
+  "entry_points": [
+    "tests/test_xenium_parser.py",
+    "tests/test_merscope_parser.py",
+    "tests/test_visium_hd_parser.py",
+    "tests/test_parsers_lazy_imports.py",
+    "tools/repo_map/generate.py"
+  ],
+  "test_command": "pytest -q",
+  "lint_command": "ruff check ."
+}
