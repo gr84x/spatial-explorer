@@ -12,9 +12,16 @@ Spatial Explorer is deployed as a static site.
 - **DNS:** Cloudflare zone `gr84x.com`
 
 ### Auto-Deploy
-The app auto-deploys from the `main` branch of `gr84x/spatial-explorer`.
+The app auto-deploys via GitHub Actions when CI succeeds on `main`.
 
-Push to `main` → DigitalOcean rebuilds → Live in ~2 minutes.
+Merge to `main` → CI passes → GitHub Actions triggers a DigitalOcean App Platform deployment → Live in ~2 minutes.
+
+#### GitHub Actions configuration
+Required in GitHub repo settings:
+- **Secret:** `DIGITALOCEAN_ACCESS_TOKEN` (DigitalOcean API token with access to App Platform)
+- **Variable:** `DIGITALOCEAN_APP_ID` (DigitalOcean App Platform app ID)
+
+The deploy workflow is `.github/workflows/deploy.yml`.
 
 ### DNS Configuration
 - **Record:** CNAME `spatialexplorer` → `spatial-explorer-qqgdl.ondigitalocean.app`

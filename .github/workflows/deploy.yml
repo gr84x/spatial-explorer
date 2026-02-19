@@ -5,16 +5,42 @@ on:
     workflows: ["CI"]
     types: [completed]
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+      }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: true
+    permissions:
+      contents: read
+    environment: production
+    env:
+      DIGITALOCEAN_APP_ID: ${{ vars.DIGITALOCEAN_APP_ID || 'c71699c2-26e2-4ca3-838c-f429fd07fe72' }}
     steps:
+      - name: Validate required secrets
+        run: |
+          if [ -z "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" ]; then
+            echo "Missing required GitHub Actions secret: DIGITALOCEAN_ACCESS_TOKEN" >&2
+            exit 1
+          fi
+
+          if [ -z "${DIGITALOCEAN_APP_ID}" ]; then
+            echo "Missing DigitalOcean App ID (set GitHub Actions variable: DIGITALOCEAN_APP_ID)" >&2
+            exit 1
+          fi
+
       - name: Trigger DigitalOcean Deploy
         run: |
-          curl -X POST \
+          set -euo pipefail
+          curl --fail-with-body -sS -X POST \
             -H "Authorization: Bearer ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"force_build": true}' \
-            "https://api.digitalocean.com/v2/apps/c71699c2-26e2-4ca3-838c-f429fd07fe72/deployments"
+            "https://api.digitalocean.com/v2/apps/${DIGITALOCEAN_APP_ID}/deployments"
