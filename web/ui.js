@@ -75,6 +75,9 @@ export function createUi({dom, renderer, state, dataApi}){
     visStatus,
     datasetLabel,
     datasetBadgeText,
+    datasetSideLabel,
+    uploadPrimaryBtn,
+    downloadTemplateBtn,
 
     geneInput,
     geneList,
@@ -292,6 +295,16 @@ export function createUi({dom, renderer, state, dataApi}){
     setWelcomeVisible(shouldShowWelcome());
   }
 
+  // ---------- Upload helpers ----------
+  function showUploadHelp(){
+    geneHint.innerHTML = 'Upload a CSV/TSV with <strong>cell_id</strong>, <strong>x</strong>, <strong>y</strong> (optional <strong>cell_type</strong>). Extra numeric columns become gene expression.';
+  }
+
+  function openFilePicker(){
+    showUploadHelp();
+    fileInput.click();
+  }
+
   // ---------- Tooltip ----------
   function showTip(c, x, y){
     const xy = `(${c.x.toFixed(3)}, ${c.y.toFixed(3)})`;
@@ -452,7 +465,7 @@ export function createUi({dom, renderer, state, dataApi}){
     state.geneQuery = (q || '').trim().toUpperCase();
     if(state.geneQuery === ''){
       state.geneIdx = null;
-      geneHint.innerHTML = 'Tip: load a CSV/TSV, then search a gene to color cells by expression.';
+      geneHint.innerHTML = 'Tip: upload a CSV/TSV, then search a gene to color cells by expression.';
     } else {
       const idx = state.geneIndex.get(state.geneQuery);
       if(idx == null){
@@ -761,6 +774,9 @@ export function createUi({dom, renderer, state, dataApi}){
       datasetLabel.textContent = `Loaded: ${ds.filename}`;
       datasetLabel.style.display = 'block';
     }
+    if(datasetSideLabel){
+      datasetSideLabel.innerHTML = `Loaded: <strong>${ds.filename}</strong>`;
+    }
     datasetBadgeText.innerHTML = `<strong style="color:var(--text);font-weight:600">${state.cells.length}</strong> cells • ${state.cellTypes.length} types • ${state.genePanel.length} genes`;
 
     // Once the user loads a dataset, hide the welcome overlay.
@@ -806,6 +822,17 @@ export function createUi({dom, renderer, state, dataApi}){
     a.click();
     a.remove();
     setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  }
+
+  function downloadTemplate(){
+    const csv = [
+      'cell_id,x,y,cell_type,EPCAM,CD3E,LST1',
+      'cell_001,0.10,0.05,Epithelial,3.2,0.0,0.1',
+      'cell_002,-0.12,-0.08,T cell,0.1,2.8,0.0',
+      'cell_003,0.02,-0.15,Myeloid,0.0,0.2,3.1',
+    ].join('\n');
+    const blob = new Blob([csv + '\n'], {type: 'text/csv;charset=utf-8'});
+    downloadBlob(blob, 'spatial_explorer_template.csv');
   }
 
   function paintExportBackground(ctx, w, h){
@@ -1130,7 +1157,7 @@ export function createUi({dom, renderer, state, dataApi}){
     });
 
     if(welcomeUploadBtn){
-      welcomeUploadBtn.addEventListener('click', ()=> fileInput.click());
+      welcomeUploadBtn.addEventListener('click', openFilePicker);
     }
     if(welcomeDismissBtn){
       welcomeDismissBtn.addEventListener('click', ()=>{
@@ -1139,7 +1166,13 @@ export function createUi({dom, renderer, state, dataApi}){
       });
     }
 
-    loadBtn.addEventListener('click', ()=> fileInput.click());
+    loadBtn.addEventListener('click', openFilePicker);
+    if(uploadPrimaryBtn){
+      uploadPrimaryBtn.addEventListener('click', openFilePicker);
+    }
+    if(downloadTemplateBtn){
+      downloadTemplateBtn.addEventListener('click', downloadTemplate);
+    }
     fileInput.addEventListener('change', async ()=>{
       const f = fileInput.files && fileInput.files[0];
       try{ await loadFile(f); }
@@ -1435,6 +1468,9 @@ export function collectDom(){
     visStatus: $('visStatus'),
     datasetLabel: $('datasetLabel'),
     datasetBadgeText: $('datasetBadgeText'),
+    datasetSideLabel: $('datasetSideLabel'),
+    uploadPrimaryBtn: $('uploadPrimary'),
+    downloadTemplateBtn: $('downloadTemplate'),
 
     geneInput: $('gene'),
     geneList: $('genes'),

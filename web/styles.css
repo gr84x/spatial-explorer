@@ -705,6 +705,29 @@ html[data-theme="light"] .dropOverlay{
 
 .card:hover{ border-color: rgba(255,255,255,.14); }
 
+.mono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  padding: 2px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.datasetCard-actions{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.datasetCard-actions .btn{
+  flex: 1;
+  min-width: 140px;
+}
+
 html[data-theme="light"] .card:hover{
   border-color: rgba(2,6,23,.14);
 }
