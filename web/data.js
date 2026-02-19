@@ -416,10 +416,18 @@ export function generateDemoCells(n, genePanel, {seed=0xC0FFEE} = {}){
   return {cells, geneIndex};
 }
 
-// ---------- CSV/TSV loading (simple fast parser; no quoted-field support) ----------
+// ---------- CSV/TSV loading (fast parser with quoted-field support) ----------
 /** Normalize a header name (case/whitespace) for robust parsing. */
 export function normalizeHeader(h){
   return String(h || '').trim().replace(/^\uFEFF/, '');
+}
+
+/** Normalize a header into a key used for matching required columns (case/punct-insensitive). */
+export function normalizeHeaderKey(h){
+  return normalizeHeader(h)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
 }
 
 /** Infer delimiter from the header line (tab vs comma). */
@@ -427,9 +435,49 @@ export function inferDelimiter(headerLine){
   return headerLine.includes('\t') ? '\t' : ',';
 }
 
-/** Split a simple delimited line (CSV/TSV-lite; no quoted-field support). */
+/** Split a delimited line (supports double-quoted CSV fields and escaped quotes). */
 export function splitLine(line, delim){
-  return line.split(delim).map(s => s.trim());
+  const s = String(line || '');
+  const out = [];
+  let cur = '';
+  let inQuotes = false;
+
+  for(let i=0;i<s.length;i++){
+    const ch = s[i];
+    if(inQuotes){
+      if(ch === '"'){
+        const next = s[i+1];
+        if(next === '"'){ cur += '"'; i++; }
+        else inQuotes = false;
+      } else {
+        cur += ch;
+      }
+      continue;
+    }
+
+    if(ch === '"'){
+      inQuotes = true;
+      continue;
+    }
+
+    if(ch === delim){
+      out.push(cur.trim());
+      cur = '';
+      continue;
+    }
+
+    cur += ch;
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+function findFirstIndex(keys, aliases){
+  for(const a of aliases){
+    const i = keys.indexOf(a);
+    if(i >= 0) return i;
+  }
+  return -1;
 }
 
 /**
@@ -444,16 +492,15 @@ export function buildLoadedDataset(text, filename){
   const delim = inferDelimiter(lines[0]);
   const headersRaw = splitLine(lines[0], delim).map(normalizeHeader);
   const headers = headersRaw.map(h => h.trim());
-  const lower = headers.map(h => h.toLowerCase());
+  const keys = headersRaw.map(normalizeHeaderKey);
 
-  const idx = (name)=> lower.indexOf(name);
-  const iCell = idx('cell_id');
-  const iX = idx('x');
-  const iY = idx('y');
-  const iType = idx('cell_type');
+  const iCell = findFirstIndex(keys, ['cell_id','cellid','barcode','spot_id','spotid']);
+  const iX = findFirstIndex(keys, ['x','x_coord','x_coordinate','x_um','x_px']);
+  const iY = findFirstIndex(keys, ['y','y_coord','y_coordinate','y_um','y_px']);
+  const iType = findFirstIndex(keys, ['cell_type','celltype','type','cluster','annotation']);
 
   if(iCell < 0 || iX < 0 || iY < 0){
-    throw new Error('Missing required columns. Required: cell_id, x, y. Optional: cell_type.');
+    throw new Error('Missing required columns. Required: cell_id (or barcode/spot_id), x (or x_coord), y (or y_coord). Optional: cell_type.');
   }
 
   const geneCols = [];
