@@ -21,6 +21,31 @@ import { computeScaleBar } from './scale_bar.js';
 // ---------- URL state (shareable links) ----------
 const URL_STATE_VERSION = 1;
 
+// ---------- Feedback (mailto) ----------
+export const DEFAULT_FEEDBACK_TO = 'fox@gr84x.com';
+
+export function buildFeedbackMailto({
+  to = DEFAULT_FEEDBACK_TO,
+  name = '',
+  email = '',
+  message = '',
+  pageHref = '',
+} = {}){
+  const toTrim = String(to || '').trim();
+  const subject = 'Spatial Explorer feedback';
+  const lines = [
+    'Message:',
+    String(message || '').trim() || '(no message)',
+    '',
+    '---',
+    `Name: ${String(name || '').trim() || '(not provided)'}`,
+    `Email: ${String(email || '').trim() || '(not provided)'}`,
+  ];
+  if(pageHref) lines.push(`Page: ${String(pageHref).trim()}`);
+  const body = lines.join('\n');
+  return `mailto:${toTrim}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 function _parseNum(v){
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
@@ -1037,30 +1062,28 @@ export function createUi({dom, renderer, state, dataApi}){
     // ---------- Feedback modal (mailto) ----------
     let _feedbackOpen = false;
     let _prevBodyOverflow = '';
+    let _feedbackKeyHandler = null;
 
     function setFeedbackStatus(msg){
       if(!feedbackStatusEl) return;
       feedbackStatusEl.textContent = msg || '';
     }
 
-    function feedbackMailto(){
-      const name = String(feedbackNameEl && feedbackNameEl.value ? feedbackNameEl.value : '').trim();
-      const email = String(feedbackEmailEl && feedbackEmailEl.value ? feedbackEmailEl.value : '').trim();
-      const message = String(feedbackMsgEl && feedbackMsgEl.value ? feedbackMsgEl.value : '').trim();
+    function feedbackPayload(){
+      return {
+        name: String(feedbackNameEl && feedbackNameEl.value ? feedbackNameEl.value : ''),
+        email: String(feedbackEmailEl && feedbackEmailEl.value ? feedbackEmailEl.value : ''),
+        message: String(feedbackMsgEl && feedbackMsgEl.value ? feedbackMsgEl.value : ''),
+        pageHref: String(location && location.href ? location.href : ''),
+      };
+    }
 
-      const subject = 'Spatial Explorer feedback';
-      const lines = [
-        'Message:',
-        message || '(no message)',
-        '',
-        '---',
-        `Name: ${name || '(not provided)'}`,
-        `Email: ${email || '(not provided)'}`,
-        `Page: ${location.href}`,
-      ];
-      const body = lines.join('\\n');
-
-      return `mailto:fox@gr84x.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    function requireMessage(){
+      const msg = String(feedbackMsgEl && feedbackMsgEl.value ? feedbackMsgEl.value : '').trim();
+      if(msg.length > 0) return true;
+      setFeedbackStatus('Please enter a message before sending.');
+      if(feedbackMsgEl) feedbackMsgEl.focus();
+      return false;
     }
 
     function openFeedback(){
@@ -1073,6 +1096,15 @@ export function createUi({dom, renderer, state, dataApi}){
       // focus message for speed
       if(feedbackMsgEl) feedbackMsgEl.focus();
       else if(feedbackSendBtn) feedbackSendBtn.focus();
+
+      _feedbackKeyHandler = (e)=>{
+        if(!_feedbackOpen) return;
+        if(e.key === 'Escape'){
+          e.preventDefault();
+          closeFeedback();
+        }
+      };
+      window.addEventListener('keydown', _feedbackKeyHandler, true);
     }
 
     function closeFeedback(){
@@ -1081,6 +1113,10 @@ export function createUi({dom, renderer, state, dataApi}){
       feedbackModal.style.display = 'none';
       document.body.style.overflow = _prevBodyOverflow;
       if(feedbackBtn) feedbackBtn.focus();
+      if(_feedbackKeyHandler){
+        window.removeEventListener('keydown', _feedbackKeyHandler, true);
+        _feedbackKeyHandler = null;
+      }
     }
 
     if(feedbackBtn && feedbackModal){
@@ -1096,7 +1132,8 @@ export function createUi({dom, renderer, state, dataApi}){
 
     if(feedbackSendBtn){
       feedbackSendBtn.addEventListener('click', ()=>{
-        const href = feedbackMailto();
+        if(!requireMessage()) return;
+        const href = buildFeedbackMailto(feedbackPayload());
         setFeedbackStatus('Opening your email client…');
         // Using location.href is the most reliable for mailto.
         window.location.href = href;
@@ -1105,12 +1142,22 @@ export function createUi({dom, renderer, state, dataApi}){
 
     if(feedbackCopyBtn){
       feedbackCopyBtn.addEventListener('click', async ()=>{
-        const href = feedbackMailto();
+        if(!requireMessage()) return;
+        const href = buildFeedbackMailto(feedbackPayload());
         try{
           await navigator.clipboard.writeText(href);
           setFeedbackStatus('Copied mailto link to clipboard.');
         } catch {
           prompt('Copy this mailto link:', href);
+        }
+      });
+    }
+
+    if(feedbackMsgEl && feedbackSendBtn){
+      feedbackMsgEl.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter' && (e.metaKey || e.ctrlKey)){
+          e.preventDefault();
+          feedbackSendBtn.click();
         }
       });
     }
